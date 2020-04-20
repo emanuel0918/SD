@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 int main(void){
@@ -23,6 +24,18 @@ int main(void){
  printf("Recibi una conexion en %d\n",cliente);
  send(cliente,"Hola NetCat!\n",14,0);
  send(cliente, ":)\n",4,0);
- for(;;);
+ //----------------------------------
+ char *buffer =malloc(5);
+ int bytesRecibidos=recv(cliente,buffer,4,0);
+ //int bytesRecibidos=recv(cliente,buffer,4,MSG_WAITALL);
+ if(bytesRecibidos<0){
+  perror("El chabon se desconecto o bla\n");
+  return 1;
+ }
+ buffer[bytesRecibidos]='\0';
+ printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+ 
+ free(buffer);
+ //for(;;);
  return 0;
 }
