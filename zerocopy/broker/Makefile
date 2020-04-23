@@ -1,4 +1,5 @@
 CFLAGS=-Wall -g
+LDLIBS=-lpthread
 
 all: broker demo_dic demo_cola
 

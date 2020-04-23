@@ -3,6 +3,34 @@
  * necesitar compartir el broker y la biblioteca, si es que las hubiera.
  */
 #include "comun.h"
+char * reverseString(char *s, int l){
+ char * r=(char*)malloc((l+2)*sizeof(char));
+ for(int i=0;i<l;i++){
+  r[(l-(i+1))]=s[i];
+ }
+ r[l]='\0';
+ return r;
+}
+char rand_char(){
+	time_t t;
+	srand((unsigned)time(&t));
+	return ((char)(rand()%255));	
+}
+char * intToString(long n){
+ char * s;
+ s=(char*)malloc(sizeof(char));
+ int i=0;
+ s[i]=(char)((n%10)+48);
+ while(n/10>0){
+  i++;
+  s=(char*) realloc(s,(i+2)*sizeof(char));
+  n/=10;
+  s[i]=(char)((n%10)+48);
+ }
+ s=reverseString(s,(i+1));
+ s[(i+1)]='\0';
+ return s;
+}
 int stringToInt(char *s){
  int d=0;
  int i=0;
