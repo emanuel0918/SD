@@ -11,8 +11,10 @@
 #include <pthread.h>
 #include <string.h>
 #include <time.h>
-#define TAM 4
+#define TAM_COLA 163
+#define TAM_MENSAJE 400
 char * scan();
+char* subString (const char* input, int offset, int len, char* dest);
 int stringToInt(char * s);
 char * intToString(long n);
 char * reverseString(char *s,int l);

@@ -7,17 +7,15 @@ void * servicio(void *arg);
 struct thread_data{
 	long s_conect;
 	struct diccionario * d;
-	char buff[6];
-	int cont;
+	//char buff[6];
+	//int cont;
 };
 int main(int argc, char *argv[]){
 	//
 	struct thread_data * t_d;
 	t_d=(struct thread_data*) malloc(sizeof(struct thread_data));
-	struct cola *cl;
 	t_d->d=dic_create();
-	char mensaje[4];
-	char cola[2];
+	char mensaje[TAM_MENSAJE];
 
 	//
 	int s;
@@ -63,8 +61,8 @@ int main(int argc, char *argv[]){
 		close(s);
 		return 1;
 	}
-	strcpy(t_d->buff,"as000\0");
-	t_d->cont=2;
+	//strcpy(t_d->buff,"as000\0");
+	//t_d->cont=2;
 	while (1) {
 		tam_dir=sizeof(dir_cliente);
 		if ((t_d->s_conect=accept(s, (struct sockaddr *)&dir_cliente, &tam_dir))<0){
@@ -84,7 +82,7 @@ int main(int argc, char *argv[]){
 }
 void * servicio(void *arg){
         int s, leido,error;
-        char buf[TAM];
+        char buffer_cola[TAM_COLA];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
@@ -95,35 +93,55 @@ void * servicio(void *arg){
 	//(t_d->buff)[(2+((t_d->cont)%3))]=s_con[0];
 	//t_d->cont++;
 	//printf("desps del read %s\n",t_d->buff);
+	//caracter nulo
+	char caracter_nulo[1];
+	caracter_nulo[0]='\0';
+	//
 	char op=0;
-
+	char opr[2];
+	//
 	//nombre de la cola
-	char cola[2];
-        while ((leido=read(s, buf, TAM))>0) {
-		//Flag de op
-		op=buf[0];
+	char cola[TAM_COLA];
+        while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
+		//
+		subString(buffer_cola,1,strlen(buffer_cola)-1,cola);
+		printf("buffer de cola es %s\n",cola);
 		//parametro de referencia
 		error=0;
+		//Flag de op
+		subString(buffer_cola,0,1,opr);
+		strcat(opr,caracter_nulo);
+		printf("opcion es %s\n",opr);
+		op=opr[0];
+		//
 		switch(op){
 		 case 'c':
 			// createMQ()
-			//nombre cola 2 bytes
-			cola[0]=buf[1];cola[1]='\0';
 			dic_get(t_d->d,cola,&error);
 			if(error==-1){
 				dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
+				send(s,"0\0",(4*sizeof(char)),0);
 			}else{
+				send(s,"-1\0",(4*sizeof(char)),0);
 				printf("El registro ya existe\n");
 			}
 			break;
 		 case 'd':
 			// destroyMQ()
-			//nombre cola 2 bytes
-			cola[0]=buf[1];cola[1]='\0';
-			//free
-			free(dic_get(t_d->d,cola,&error));
-			//remover registro
-			dic_remove_entry(t_d->d,cola,NULL);
+			dic_get(t_d->d,cola,&error);
+			if(error==-1){
+				send(s,"-1\0",(4*sizeof(char)),0);
+				printf("El registro no existe\n");
+			}else{
+				//free
+				free(dic_get(t_d->d,cola,&error));
+				//remover registro
+				dic_remove_entry(t_d->d,cola,NULL);
+				send(s,"0\0",(4*sizeof(char)),0);
+			}
+			break;
+		 case 'p':
+			
 			break;
 		}
 		//El buffer esta en el hilo pero se debe
