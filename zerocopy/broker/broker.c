@@ -105,13 +105,13 @@ void * servicio(void *arg){
         while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
 		//
 		subString(buffer_cola,1,strlen(buffer_cola)-1,cola);
-		printf("buffer de cola es %s\n",cola);
+		//printf("buffer de cola es %s\n",cola);
 		//parametro de referencia
 		error=0;
 		//Flag de op
 		subString(buffer_cola,0,1,opr);
 		strcat(opr,caracter_nulo);
-		printf("opcion es %s\n",opr);
+		//printf("opcion es %s\n",opr);
 		op=opr[0];
 		//
 		switch(op){
