@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
 	close(s);
 }
 void * servicio(void *arg){
-        int s, leido,error=0;
+        int s, leido,error;
         char buf[TAM];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
@@ -102,12 +102,19 @@ void * servicio(void *arg){
         while ((leido=read(s, buf, TAM))>0) {
 		//Flag de op
 		op=buf[0];
+		//parametro de referencia
+		error=0;
 		switch(op){
 		 case 'c':
 			// createMQ()
 			//nombre cola 2 bytes
 			cola[0]=buf[1];cola[1]='\0';
-			dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
+			dic_get(t_d->d,cola,&error);
+			if(error==-1){
+				dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
+			}else{
+				printf("El registro ya existe\n");
+			}
 			break;
 		 case 'd':
 			// destroyMQ()
