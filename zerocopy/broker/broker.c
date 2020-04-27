@@ -83,14 +83,14 @@ int main(int argc, char *argv[]){
 	close(s);
 }
 void * servicio(void *arg){
-        int s, leido;
+        int s, leido,error=0;
         char buf[TAM];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
 	//
         //s=(long) arg;
-	//s=t_d->s_conect;
+	s=t_d->s_conect;
         //char *s_con=intToString((long)(t_d->s_conect));
 	//(t_d->buff)[(2+((t_d->cont)%3))]=s_con[0];
 	//t_d->cont++;
@@ -101,13 +101,22 @@ void * servicio(void *arg){
 	char cola[2];
         while ((leido=read(s, buf, TAM))>0) {
 		//Flag de op
-		op=buf[2];
+		op=buf[0];
 		switch(op){
 		 case 'c':
 			// createMQ()
 			//nombre cola 2 bytes
-			cola[0]=buf[0];cola[1]='\0';
+			cola[0]=buf[1];cola[1]='\0';
 			dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
+			break;
+		 case 'd':
+			// destroyMQ()
+			//nombre cola 2 bytes
+			cola[0]=buf[1];cola[1]='\0';
+			//free
+			free(dic_get(t_d->d,cola,&error));
+			//remover registro
+			dic_remove_entry(t_d->d,cola,NULL);
 			break;
 		}
 		//El buffer esta en el hilo pero se debe
