@@ -1,0 +1,129 @@
+<html><head><meta charset="UTF-8"></head><body><pre>
+Primer Ejercicio
+
+ 
+
+Pregunta 1 
+(0,5 puntos) ¿En cuál de los siguientes sistemas de ficheros una llamada close sobre un fichero implica un mensaje de protocolo cuando el fichero no ha sido modificado?
+A) AFS v1
+B) AFS v2
+C) NFS v3
+D) NFS v4
+
+Pregunta 2 
+(1 punto) En AFSv2, tenemos cuatro clientes (C1, C2, C3 y C4) y un servidor. C1 y C2 tienen abierto el fichero F simultáneamente, teniendo C3 y C4 una copia del fichero F del servidor en su cache (F-C3 y F-C4, respectivamente). C1 modifica el fichero y lo cierra (F-C1). A continuación, C2 modifica el fichero y lo cierra (F-C2). En una sesión posterior, C3 abre el fichero y lo modifica (F-C3-2). Si C4 abre el fichero F antes de que C3 lo cierre, ¿Qué copia será la que acceda?
+A) F-C4
+B) F-C1
+C) F-C3-2
+D) F-C2
+
+Pregunta 3 
+(0,5 puntos) ¿Cuál de los siguientes potenciales UFID permitirı́a la migración de ficheros y facilitarı́a la reutilización del id. del inodo en caso de borrado del fichero en un SFD?
+A) id. de servidor + id. única de subconj + id. inodo + num. versión, siendo subconj un subconjunto de ficheros de un servidor
+B) id. única de subconj + id. inodo + num. versión, siendo subconj un subconjunto de ficheros de un SFD
+C) id. única de subconj + id. inodo, siendo subconj un subconjunto de ficheros de un SFD
+D) id. de servidor + id. disco + id. partición + id. inodo + num. versión
+
+Pregunta 4 
+(0,5 puntos) Suponga que dos clientes actualizan de forma simultánea zonas disjuntas de un fichero. Considere el protocolo de coherencia de Sprite (Prot1) y el de DFS (Prot2). ¿Usarán la cache los dos clientes en ambos protocolos?
+A) En ninguno de los dos
+B) En ambos
+C) Solo en Prot1
+D) Solo en Prot2
+
+Pregunta 5 
+(1 punto) Supongamos que tenemos instalado el sistema de ficheros GPFS en un entorno con 6 nodos de E/S y con uso de cache de datos en los nodos de cómputo. Considere que el tamaño de bloque utilizado por GPFS es de 16KB, que se lleva a cabo prefetching secuencial de 2 bloques adicionales y que el tamaño de la rodaja es de 128KB. Además, se supone que la cache está inicialmente vacı́a y tiene un tamaño suficiente para albergar todos los bloques a los que se vaya accediendo. Si el primer nodo de E/S tiene B1, B2, B3, B4, B5, B6, B7 y B8 del fichero F y el resto de los bloques, de manera secuencial se reparten entre el resto de nodos de E/S, es decir, el segundo nodo tiene B9, B10, B11, B12, B13, B14, B15 y B16 y ası́ sucesivamente ¿Cuántas solicitudes a los nodos de E/S tendrá que realizar un nodo de cómputo que pretenda realizar una operación de lectura de los primeros 640K del fichero F?
+A) 40 solitudes en total a 5 nodos de E/S
+B) 15 solicitudes en total a 5 nodos de E/S
+C) 20 solicitudes en total a 5 nodos de E/S
+D) 20 solicitudes en total a 6 nodos de E/S
+
+Pregunta 6 
+(0,5 puntos) En AFSv1, si un cliente tiene la copia de un fichero en la cache y realiza una apertura de dicho fichero (llamada open), ¿cuántas interacciones deberı́a tener el cliente con el servidor para acceder al fichero?
+A) Ninguna en cualquier caso
+B) Ninguna, salvo si ha recibido una invalidación por parte del servidor
+C) Ninguna, salvo que le haya enviador el servidor una actualización del fichero
+D) 1 en cualquier caso
+
+Pregunta 7 
+(0,5 puntos) En AFSv2, tenemos tres clientes y un servidor. Si todos los clientes tienen una copia del fichero F del servidor en su cache y los tres clientes abren el fichero F concurrentemente para lectura, ¿cuántos accesos en total por parte de los clientes se realizarán al servidor para comprobar que las copias son válidas?
+A) 3
+B) 6
+C) 1
+D) 0
+
+Pregunta 8 
+(0,5 puntos) ¿En cuál de las siguientes arquitecturas el servidor no implementa la abstracción correspondiente al fichero?
+A) Arquitectura tradicional con cliente thin
+B) Arquitectura alternativa
+C) Arquitectura tradicional con cliente fat
+D) Arquitectura editor-subscriptor
+
+Pregunta 9 
+(0,5 puntos) ¿En cuál de los siguientes escenarios se lleva a cabo validación de la cache dirigida por el servidor?
+A) En ext4, sistema de ficheros centralizado
+B) En NFS v3
+C) En AFS v2
+D) En AFS v1 
+
+Segundo Ejercicio
+
+ En GPFS, tenemos una aplicación compuesta por 4 procesos. Se llevan a cabo la siguiente secuencia de operaciones:  
+- El primer proceso escribe 64K sobre un fichero f desde el inicio (desplazamiento = 0)  
+- El segundo proceso escribe 64K sobre el fichero f, comenzando en el desplazamiento 64K  
+- El segundo proceso escribe 32K sobre el fichero f, comenzando en el desplazamiento 128K  
+- El tercer proceso escribe 32K sobre el fichero f, comenzando en el desplazamiento 160K  
+- El tercer proceso escribe 32K en el fichero f, desde el desplazamiento 192K  
+- El cuarto proceso escribe 32K en el mismo fichero, desde el desplazamiento 224K  
+- El primer proceso escribe 32K en el mismo fichero, desde el desplazamiento 64K  
+- El segundo proceso escribe 32K en el mismo fichero, desde el desplazamiento 96K
+
+Pregunta 10 
+(1 punto) Indicar cuántos tokens son solicitados en total por los 4 procesos al Gestor de Tokens:
+A) 8
+B) 6
+C) 4
+D) 5
+
+Pregunta 11 
+(0,5 puntos) Si una vez terminadas las operaciones de escritura del fichero f, el primer proceso realizara una operación stat sobre el fichero f, indicar cuántas revocaciones de tokens de escritura compartida del i-nodo de f se llevarı́an a cabo.
+A) 4
+B) 2
+C) 0
+D) 1
+
+Pregunta 12 
+(0,5 puntos) Al final de dicha secuencia, ¿qué token tendrá el segundo proceso?
+A) [96K,224K)
+B) [96K,∞)
+C) [96K,160K)
+D) [64K,160K)
+
+Pregunta 13 
+(0,5 puntos) Al final de dicha secuencia, ¿qué token tendrá el cuarto proceso?
+A) [224K,256K)
+B) [224K,∞)
+C) No tendrá ningún token
+D) [160K,∞)
+
+Pregunta 14 
+(1 punto) En la secuencia anterior, ¿cuántos ajustes de tokens hacen los 4 procesos en total, considerando ajuste a la revocación de tokens que entren en conflicto con el rango requerido?
+A) 0
+B) 3
+C) 6
+D) 4
+
+Pregunta 15 
+(0,5 puntos) Al final de dicha secuencia, ¿qué token tendrá el tercer proceso?
+A) [160K,256K)
+B) [160K,∞)
+C) [160K,224K)
+D) [96K,256K)
+
+Pregunta 16 
+(0,5 puntos) Al final de dicha secuencia, ¿qué token tendrá el primer proceso?
+A) [0,64K)
+B) [0,96K)
+C) [0,∞)
+D) [64K,96K) 
+
