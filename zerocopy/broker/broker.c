@@ -83,9 +83,14 @@ int main(int argc, char *argv[]){
 void * servicio(void *arg){
         int s, leido,error;
         char buffer_cola[TAM_COLA];
+	char cola[TAM_COLA];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
+	for(int i=0;i<TAM_COLA;i++){
+		buffer_cola[i]='\0';
+		cola[i]='\0';
+	}
 	//
         //s=(long) arg;
 	s=t_d->s_conect;
@@ -101,7 +106,6 @@ void * servicio(void *arg){
 	char opr[2];
 	//
 	//nombre de la cola
-	char cola[TAM_COLA];
         while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
 		//
 		subString(buffer_cola,1,strlen(buffer_cola)-1,cola);

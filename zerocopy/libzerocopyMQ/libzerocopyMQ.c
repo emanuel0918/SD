@@ -9,17 +9,8 @@ int createMQ(const char *cola) {
 	int s=obtenerSocket();
 	
 	char * mensaje;
-	mensaje= (char*)malloc(sizeof(strlen(TAM_COLA))+3);
-	//limpiar buffer
-	for(int i=0;i<strlen(cola)+3;i++){
-		mensaje[i]='\0';
-	}
-	//flag de op
-	mensaje[0]='c';
-	//copiar nombre
-	for(int i=0;i<strlen(cola)+2;i++){
-		mensaje[(i+1)]=cola[i];
-	}
+	mensaje=NULL;
+	prepararMensaje(&mensaje,cola,'c');
 	//
 	send(s,mensaje,strlen(mensaje),0);
 	//
@@ -29,20 +20,11 @@ int createMQ(const char *cola) {
 	return resp;
 }
 int destroyMQ(const char *cola){
-	int s = obtenerSocket();
+	int s=obtenerSocket();
 	
 	char * mensaje;
-	mensaje= (char*)malloc(sizeof(strlen(TAM_COLA))+3);
-	//limpiar buffer
-	for(int i=0;i<strlen(cola)+3;i++){
-		mensaje[i]='\0';
-	}
-	//flag de op
-	mensaje[0]='d';
-	//copiar nombre
-	for(int i=0;i<strlen(cola)+2;i++){
-		mensaje[(i+1)]=cola[i];
-	}
+	mensaje=NULL;
+	prepararMensaje(&mensaje,cola,'d');
 	//
 	send(s,mensaje,strlen(mensaje),0);
 	//
@@ -83,3 +65,25 @@ int obtenerSocket(){
 	return s;
 
 }
+
+
+void prepararMensaje(char ** mensaje,const char *cola,char opc){
+	*mensaje= (char*)malloc(strlen(cola)+2);
+	//flag de op
+	(*mensaje)[0]=opc;
+	for(int i=1;i<strlen(cola);i++){
+		(*mensaje)[i]='\0';
+	}
+	//copiar nombre
+	for(int i=0;i<strlen(cola);i++){
+		(*mensaje)[(i+1)]=cola[i];
+	}
+	//
+	(*mensaje)[(strlen(cola))+1]='\0';
+
+
+
+}
+
+
+
