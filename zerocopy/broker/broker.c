@@ -15,7 +15,6 @@ int main(int argc, char *argv[]){
 	struct thread_data * t_d;
 	t_d=(struct thread_data*) malloc(sizeof(struct thread_data));
 	t_d->d=dic_create();
-	char mensaje[TAM_MENSAJE];
 
 	//
 	int s;
@@ -82,15 +81,16 @@ int main(int argc, char *argv[]){
 }
 void * servicio(void *arg){
         int s, leido,error;
+	int flag1,flag2;
         char buffer_cola[TAM_COLA];
-	char cola[TAM_COLA];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
+	//inicializar
 	for(int i=0;i<TAM_COLA;i++){
 		buffer_cola[i]='\0';
-		cola[i]='\0';
 	}
+	
 	//
         //s=(long) arg;
 	s=t_d->s_conect;
@@ -105,25 +105,20 @@ void * servicio(void *arg){
 	char op=0;
 	char opr[2];
 	//
+	flag1=flag2=0;
 	//nombre de la cola
-        while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
-		//
-		subString(buffer_cola,1,strlen(buffer_cola)-1,cola);
-		//printf("buffer de cola es %s\n",cola);
-		//parametro de referencia
-		error=0;
-		//Flag de op
-		subString(buffer_cola,0,1,opr);
-		strcat(opr,caracter_nulo);
-		//printf("opcion es %s\n",opr);
+    while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
+		flag1=1;
+		while((leido=read(s,opr,sizeof(char)*2))>0){
 		op=opr[0];
 		//
 		switch(op){
 		 case 'c':
+			flag2=1;
 			// createMQ()
-			dic_get(t_d->d,cola,&error);
+			dic_get(t_d->d,buffer_cola,&error);
 			if(error==-1){
-				dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
+				dic_put(t_d->d,buffer_cola,(void*)(struct cola *)cola_create());
 				send(s,"0\0",(4*sizeof(char)),0);
 			}else{
 				send(s,"-1\0",(4*sizeof(char)),0);
@@ -131,20 +126,22 @@ void * servicio(void *arg){
 			}
 			break;
 		 case 'd':
+			flag2=1;
 			// destroyMQ()
-			dic_get(t_d->d,cola,&error);
+			dic_get(t_d->d,buffer_cola,&error);
 			if(error==-1){
 				send(s,"-1\0",(4*sizeof(char)),0);
 				printf("El registro no existe\n");
 			}else{
 				//free
-				free(dic_get(t_d->d,cola,&error));
+				free(dic_get(t_d->d,buffer_cola,&error));
 				//remover registro
-				dic_remove_entry(t_d->d,cola,NULL);
+				dic_remove_entry(t_d->d,buffer_cola,NULL);
 				send(s,"0\0",(4*sizeof(char)),0);
 			}
 			break;
 		 case 'p':
+			flag2=1;
 			
 			break;
 		}
@@ -158,6 +155,24 @@ void * servicio(void *arg){
                 //        close(s);
                 //        return NULL;
                 //}
+	if(flag1){
+		if(flag2){
+			break;
+		}
+	}
+	}
+        if (leido<0) {
+                perror("error en read");
+                close(s);
+                return NULL;
+        }
+	
+	if(flag1){
+		if(flag2){
+			break;
+		}
+	}
+
 
         }
         if (leido<0) {
@@ -167,5 +182,6 @@ void * servicio(void *arg){
         }
         close(s);
         return NULL;
+
 }
 

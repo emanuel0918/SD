@@ -11,8 +11,8 @@
 #include <pthread.h>
 #include <string.h>
 #include <time.h>
-#define TAM_COLA 163
-#define TAM_MENSAJE 400
+#define TAM_COLA 256
+#define TAM_MENSAJE 10000
 char * scan();
 char* subString (const char* input, int offset, int len, char* dest);
 int stringToInt(char * s);

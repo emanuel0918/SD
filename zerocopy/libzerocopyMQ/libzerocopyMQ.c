@@ -5,18 +5,22 @@
 
 //---------------------------------------------------------------------------------------------
 
+
 int createMQ(const char *cola) {
 	int s=obtenerSocket();
 	
-	char * mensaje;
-	mensaje=NULL;
-	prepararMensaje(&mensaje,cola,'c');
-	//
-	send(s,mensaje,strlen(mensaje),0);
-	//
+	int length=strlen(cola);
+	if(length>TAM_COLA){
+		length=TAM_COLA;
+	}
+
+	send(s,cola,length,0);
+
 	char respuesta[4];
 	read(s,respuesta,(4*sizeof(char)));
 	int resp=atoi(respuesta);
+	
+	
 	return resp;
 }
 int destroyMQ(const char *cola){
