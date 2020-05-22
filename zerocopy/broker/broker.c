@@ -10,6 +10,12 @@ struct thread_data{
 	//char buff[6];
 	//int cont;
 };
+
+struct data{
+	char cola[TAM_COLA];
+	char opc;
+};
+
 int main(int argc, char *argv[]){
 	//
 	struct thread_data * t_d;
@@ -81,8 +87,17 @@ int main(int argc, char *argv[]){
 }
 void * servicio(void *arg){
         int s, leido,error;
-	int flag1,flag2;
         char buffer_cola[TAM_COLA];
+	//
+	int packet_size=(TAM_COLA*sizeof(char))+(5*sizeof(char));
+	//
+	struct data* socket_data;
+	void * socket_data2;
+	//socket_data=(struct data*)malloc(packet_size);
+	//
+	//socket_data->opc=0;
+	char op=0;
+	//
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
@@ -94,27 +109,11 @@ void * servicio(void *arg){
 	//
         //s=(long) arg;
 	s=t_d->s_conect;
-        //char *s_con=intToString((long)(t_d->s_conect));
-	//(t_d->buff)[(2+((t_d->cont)%3))]=s_con[0];
-	//t_d->cont++;
-	//printf("desps del read %s\n",t_d->buff);
-	//caracter nulo
-	char caracter_nulo[1];
-	caracter_nulo[0]='\0';
-	//
-	char op=0;
-	char opr[2];
-	//
-	flag1=flag2=0;
-	//nombre de la cola
-    while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
-		flag1=1;
-		while((leido=read(s,opr,sizeof(char)*2))>0){
-		op=opr[0];
-		//
+	
+    while ((leido=read(s, (void *)(struct data*)socket_data,packet_size))>0) {
+		op=socket_data->opc;
 		switch(op){
 		 case 'c':
-			flag2=1;
 			// createMQ()
 			dic_get(t_d->d,buffer_cola,&error);
 			if(error==-1){
@@ -126,7 +125,6 @@ void * servicio(void *arg){
 			}
 			break;
 		 case 'd':
-			flag2=1;
 			// destroyMQ()
 			dic_get(t_d->d,buffer_cola,&error);
 			if(error==-1){
@@ -141,40 +139,10 @@ void * servicio(void *arg){
 			}
 			break;
 		 case 'p':
-			flag2=1;
 			
 			break;
 		}
-		//El buffer esta en el hilo pero se debe
-		// gestionar el uso de memoria en este proceso
-		// se asigna una variable de tipo diccionario que
-		// elige si guardar en una nueva cola o en una
-		// ya creada 
-                //if (write(s, buf, leido)<0) {
-                //        perror("error en write");
-                //        close(s);
-                //        return NULL;
-                //}
-	if(flag1){
-		if(flag2){
-			break;
-		}
 	}
-	}
-        if (leido<0) {
-                perror("error en read");
-                close(s);
-                return NULL;
-        }
-	
-	if(flag1){
-		if(flag2){
-			break;
-		}
-	}
-
-
-        }
         if (leido<0) {
                 perror("error en read");
                 close(s);

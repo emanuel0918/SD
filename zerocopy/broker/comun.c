@@ -3,6 +3,7 @@
  * necesitar compartir el broker y la biblioteca, si es que las hubiera.
  */
 #include "comun.h"
+
 char * reverseString(char *s, int l){
  char * r=(char*)malloc((l+2)*sizeof(char));
  for(int i=0;i<l;i++){

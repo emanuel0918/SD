@@ -6,15 +6,23 @@
 //---------------------------------------------------------------------------------------------
 
 
+
+struct data{
+	char cola[TAM_COLA];
+	char opc;
+};
 int createMQ(const char *cola) {
 	int s=obtenerSocket();
 	
-	int length=strlen(cola);
-	if(length>TAM_COLA){
-		length=TAM_COLA;
-	}
+	struct data* socket_data;
+	sokcet_data=(struct data*)malloc(sizeof(struct data));
+	
+	(socket_data->cola)=&cola;
 
-	send(s,cola,length,0);
+	//
+	socket_data->opc='c';
+
+	send(s,data,length,0);
 
 	char respuesta[4];
 	read(s,respuesta,(4*sizeof(char)));
