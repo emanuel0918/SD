@@ -1,8 +1,0 @@
-# Ejemplo sencillo de ordenes
-# Procesos: A, B, C
-A: EVENT
-B: EVENT
-C: EVENT
-A: GETCLOCK
-B: GETCLOCK
-C: GETCLOCK
