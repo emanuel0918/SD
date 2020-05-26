@@ -10,11 +10,15 @@ struct thread_data{
 	//char buff[6];
 	//int cont;
 };
-
-struct data{
-	char cola[TAM_COLA];
-	char opc;
-};
+void print_thread(struct thread_data * t_d,char *cadena){
+	printf("Socket %ld\n",t_d->s_conect);
+	int error;
+	dic_get(t_d->d,cadena,&error);
+	int length=sizeof(t_d->d);
+	printf("Size Of Dic: %d\n",length);
+	
+	printf("Cola: %s\nError: %d\n",cadena,error);
+}
 
 int main(int argc, char *argv[]){
 	//
@@ -86,68 +90,94 @@ int main(int argc, char *argv[]){
 	close(s);
 }
 void * servicio(void *arg){
-        int s, leido,error;
-        char buffer_cola[TAM_COLA];
+	int s, leido;
+	int error=0;
+	char nombre_cola[TAM_COLA];
+	char mensaje[TAM_MENSAJE];
 	//
-	int packet_size=(TAM_COLA*sizeof(char))+(5*sizeof(char));
-	//
-	struct data* socket_data;
-	void * socket_data2;
-	//socket_data=(struct data*)malloc(packet_size);
-	//
-	//socket_data->opc=0;
 	char op=0;
+	char opc[2];
+
 	//
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
-	//inicializar
-	for(int i=0;i<TAM_COLA;i++){
-		buffer_cola[i]='\0';
-	}
-	
-	//
         //s=(long) arg;
 	s=t_d->s_conect;
+	//inicializar
+	//for(int i=0;i<TAM_COLA;i++){
+	//	buffer_cola[i]='\0';
+	//}
 	
-    while ((leido=read(s, (void *)(struct data*)socket_data,packet_size))>0) {
-		op=socket_data->opc;
-		switch(op){
-		 case 'c':
-			// createMQ()
-			dic_get(t_d->d,buffer_cola,&error);
-			if(error==-1){
-				dic_put(t_d->d,buffer_cola,(void*)(struct cola *)cola_create());
-				send(s,"0\0",(4*sizeof(char)),0);
-			}else{
-				send(s,"-1\0",(4*sizeof(char)),0);
-				printf("El registro ya existe\n");
-			}
-			break;
-		 case 'd':
-			// destroyMQ()
-			dic_get(t_d->d,buffer_cola,&error);
-			if(error==-1){
-				send(s,"-1\0",(4*sizeof(char)),0);
-				printf("El registro no existe\n");
-			}else{
-				//free
-				free(dic_get(t_d->d,buffer_cola,&error));
-				//remover registro
-				dic_remove_entry(t_d->d,buffer_cola,NULL);
-				send(s,"0\0",(4*sizeof(char)),0);
-			}
-			break;
-		 case 'p':
-			
-			break;
-		}
+	//
+
+    if ((leido=read(s, opc,2*sizeof(char)))>0) {
+		op=opc[0];
 	}
         if (leido<0) {
                 perror("error en read");
                 close(s);
                 return NULL;
         }
+
+	//
+	
+    if ((leido=read(s, nombre_cola,TAM_COLA*sizeof(char)))>0) {
+		//printf("a1\n%s\n",buffer_cola);
+	}
+	if (leido<0) {
+			perror("error en read");
+			close(s);
+			return NULL;
+	}
+	//
+	//
+	//
+	if(op=='c' || op=='d'){
+
+		switch(op){
+		 case 'c':
+			// createMQ()
+			dic_get(t_d->d,nombre_cola,&error);
+			if(error==-1){
+				dic_put(t_d->d,nombre_cola,(void*)(struct cola *)cola_create());
+				send(s,"0\0",(4*sizeof(char)),0);
+			}else{
+				send(s,"-1\0",(4*sizeof(char)),0);
+				printf("El registro ya existe\n");
+			}
+			break;
+
+		 case 'd':
+			// destroyMQ()
+			dic_get(t_d->d,nombre_cola,&error);
+			if(error==-1){
+				send(s,"-1\0",(4*sizeof(char)),0);
+				printf("El registro no existe\n");
+			}else{
+				//free
+				free(dic_get(t_d->d,nombre_cola,&error));
+				//remover registro
+				dic_remove_entry(t_d->d,nombre_cola,NULL);
+				send(s,"0\0",(4*sizeof(char)),0);
+			}
+			break;
+		}
+
+	}else{
+		// FICH
+	
+		if ((leido=read(s, mensaje,TAM_MENSAJE*sizeof(char)))>0) {
+			printf("mensaje: %s\n",mensaje);
+		}
+		if (leido<0) {
+				perror("error en read");
+				close(s);
+				return NULL;
+		}
+
+	}
+	
         close(s);
         return NULL;
 

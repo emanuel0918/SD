@@ -5,43 +5,32 @@
 
 //---------------------------------------------------------------------------------------------
 
-
-
-struct data{
-	char cola[TAM_COLA];
-	char opc;
-};
 int createMQ(const char *cola) {
 	int s=obtenerSocket();
 	
-	struct data* socket_data;
-	sokcet_data=(struct data*)malloc(sizeof(struct data));
-	
-	(socket_data->cola)=&cola;
-
-	//
-	socket_data->opc='c';
-
-	send(s,data,length,0);
+	//send opc
+	send(s,"c\0",2*sizeof(char),0);
+	//send cola
+	send(s,cola,strlen(cola),0);
 
 	char respuesta[4];
 	read(s,respuesta,(4*sizeof(char)));
+	close(s);
 	int resp=atoi(respuesta);
-	
 	
 	return resp;
 }
 int destroyMQ(const char *cola){
 	int s=obtenerSocket();
 	
-	char * mensaje;
-	mensaje=NULL;
-	prepararMensaje(&mensaje,cola,'d');
-	//
-	send(s,mensaje,strlen(mensaje),0);
-	//
+	//send opc
+	send(s,"d\0",2*sizeof(char),0);
+	//send cola
+	send(s,cola,strlen(cola),0);
+
 	char respuesta[4];
 	read(s,respuesta,(4*sizeof(char)));
+	close(s);
 	int resp=atoi(respuesta);
 	return resp;
 }
@@ -75,25 +64,6 @@ int obtenerSocket(){
 	}
 	//
 	return s;
-
-}
-
-
-void prepararMensaje(char ** mensaje,const char *cola,char opc){
-	*mensaje= (char*)malloc(strlen(cola)+2);
-	//flag de op
-	(*mensaje)[0]=opc;
-	for(int i=1;i<strlen(cola);i++){
-		(*mensaje)[i]='\0';
-	}
-	//copiar nombre
-	for(int i=0;i<strlen(cola);i++){
-		(*mensaje)[(i+1)]=cola[i];
-	}
-	//
-	(*mensaje)[(strlen(cola))+1]='\0';
-
-
 
 }
 
