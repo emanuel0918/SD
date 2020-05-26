@@ -10,21 +10,12 @@ struct thread_data{
 	//char buff[6];
 	//int cont;
 };
-void print_thread(struct thread_data * t_d,char *cadena){
-	printf("Socket %ld\n",t_d->s_conect);
-	int error;
-	dic_get(t_d->d,cadena,&error);
-	int length=sizeof(t_d->d);
-	printf("Size Of Dic: %d\n",length);
-	
-	printf("Cola: %s\nError: %d\n",cadena,error);
-}
-
 int main(int argc, char *argv[]){
 	//
 	struct thread_data * t_d;
 	t_d=(struct thread_data*) malloc(sizeof(struct thread_data));
 	t_d->d=dic_create();
+	char mensaje[TAM_MENSAJE];
 
 	//
 	int s;
@@ -90,96 +81,90 @@ int main(int argc, char *argv[]){
 	close(s);
 }
 void * servicio(void *arg){
-	int s, leido;
-	int error=0;
-	char nombre_cola[TAM_COLA];
-	char mensaje[TAM_MENSAJE];
-	//
-	char op=0;
-	char opc[2];
-
-	//
+        int s, leido,error;
+        char buffer_cola[TAM_COLA];
+	char cola[TAM_COLA];
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
+	for(int i=0;i<TAM_COLA;i++){
+		buffer_cola[i]='\0';
+		cola[i]='\0';
+	}
+	//
         //s=(long) arg;
 	s=t_d->s_conect;
-	//inicializar
-	//for(int i=0;i<TAM_COLA;i++){
-	//	buffer_cola[i]='\0';
-	//}
-	
+        //char *s_con=intToString((long)(t_d->s_conect));
+	//(t_d->buff)[(2+((t_d->cont)%3))]=s_con[0];
+	//t_d->cont++;
+	//printf("desps del read %s\n",t_d->buff);
+	//caracter nulo
+	char caracter_nulo[1];
+	caracter_nulo[0]='\0';
 	//
-
-    if ((leido=read(s, opc,2*sizeof(char)))>0) {
-		op=opc[0];
-	}
-        if (leido<0) {
-                perror("error en read");
-                close(s);
-                return NULL;
-        }
-
+	char op=0;
+	char opr[2];
 	//
-	
-    if ((leido=read(s, nombre_cola,TAM_COLA*sizeof(char)))>0) {
-		//printf("a1\n%s\n",buffer_cola);
-	}
-	if (leido<0) {
-			perror("error en read");
-			close(s);
-			return NULL;
-	}
-	//
-	//
-	//
-	if(op=='c' || op=='d'){
-
+	//nombre de la cola
+        while ((leido=read(s, buffer_cola, TAM_COLA))>0) {
+		//
+		subString(buffer_cola,1,strlen(buffer_cola)-1,cola);
+		//printf("buffer de cola es %s\n",cola);
+		//parametro de referencia
+		error=0;
+		//Flag de op
+		subString(buffer_cola,0,1,opr);
+		strcat(opr,caracter_nulo);
+		//printf("opcion es %s\n",opr);
+		op=opr[0];
+		//
 		switch(op){
 		 case 'c':
 			// createMQ()
-			dic_get(t_d->d,nombre_cola,&error);
+			dic_get(t_d->d,cola,&error);
 			if(error==-1){
-				dic_put(t_d->d,nombre_cola,(void*)(struct cola *)cola_create());
+				dic_put(t_d->d,cola,(void*)(struct cola *)cola_create());
 				send(s,"0\0",(4*sizeof(char)),0);
 			}else{
 				send(s,"-1\0",(4*sizeof(char)),0);
 				printf("El registro ya existe\n");
 			}
 			break;
-
 		 case 'd':
 			// destroyMQ()
-			dic_get(t_d->d,nombre_cola,&error);
+			dic_get(t_d->d,cola,&error);
 			if(error==-1){
 				send(s,"-1\0",(4*sizeof(char)),0);
 				printf("El registro no existe\n");
 			}else{
 				//free
-				free(dic_get(t_d->d,nombre_cola,&error));
+				free(dic_get(t_d->d,cola,&error));
 				//remover registro
-				dic_remove_entry(t_d->d,nombre_cola,NULL);
+				dic_remove_entry(t_d->d,cola,NULL);
 				send(s,"0\0",(4*sizeof(char)),0);
 			}
 			break;
+		 case 'p':
+			
+			break;
 		}
+		//El buffer esta en el hilo pero se debe
+		// gestionar el uso de memoria en este proceso
+		// se asigna una variable de tipo diccionario que
+		// elige si guardar en una nueva cola o en una
+		// ya creada 
+                //if (write(s, buf, leido)<0) {
+                //        perror("error en write");
+                //        close(s);
+                //        return NULL;
+                //}
 
-	}else{
-		// FICH
-	
-		if ((leido=read(s, mensaje,TAM_MENSAJE*sizeof(char)))>0) {
-			printf("mensaje: %s\n",mensaje);
-		}
-		if (leido<0) {
-				perror("error en read");
-				close(s);
-				return NULL;
-		}
-
-	}
-	
+        }
+        if (leido<0) {
+                perror("error en read");
+                close(s);
+                return NULL;
+        }
         close(s);
         return NULL;
-
 }
-
