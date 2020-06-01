@@ -3,35 +3,56 @@
 #include "comun.h"
 
 
-//---------------------------------------------------------------------------------------------
 
-int createMQ(const char *cola) {
+//---------------------------------------------------------------------------------------------
+int create_destroy(const char * cola, char opc){
+
 	int s=obtenerSocket();
-	
-	char * mensaje;
-	mensaje=NULL;
-	prepararMensaje(&mensaje,cola,'c');
-	//
-	send(s,mensaje,strlen(mensaje),0);
 	//
 	char respuesta[4];
-	read(s,respuesta,(4*sizeof(char)));
-	int resp=atoi(respuesta);
-	return resp;
+	respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+	//
+	int leido;
+	//send opc
+	char opcion[2];
+	opcion[0]=opc;opcion[2]='\0';
+	send(s,opcion,2*sizeof(char),0);
+    if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
+		//send sizeof
+		char * sizeof_cola_s;
+		sizeof_cola_s=intToString(strlen(cola));
+		send(s,sizeof_cola_s,sizeof(sizeof_cola_s),0);
+    	if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
+		//send cola
+		send(s,cola,strlen(cola),0);
+    	if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
+			}
+			if (leido<0) {
+					respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+					close(s);
+					return atoi(respuesta);
+			}
+		}
+		if (leido<0) {
+				respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+				close(s);
+				return atoi(respuesta);
+		}
+	}
+	if (leido<0) {
+			respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+			close(s);
+			return atoi(respuesta);
+	}
+	//
+	return atoi(respuesta);
 }
+int createMQ(const char *cola) {
+	return create_destroy(cola,'c');
+}
+
 int destroyMQ(const char *cola){
-	int s=obtenerSocket();
-	
-	char * mensaje;
-	mensaje=NULL;
-	prepararMensaje(&mensaje,cola,'d');
-	//
-	send(s,mensaje,strlen(mensaje),0);
-	//
-	char respuesta[4];
-	read(s,respuesta,(4*sizeof(char)));
-	int resp=atoi(respuesta);
-	return resp;
+	return create_destroy(cola,'d');
 }
 int put(const char *cola, const void *mensaje, uint32_t tam) {
     return 0;
@@ -40,49 +61,5 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
     return 0;
 }
 
-//---------------------------------------------------------------------------------------------
-
-int obtenerSocket(){
-	int s;
-	struct sockaddr_in dir;
-	struct hostent *host_info;
-	if ((s=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-		perror("error creando socket");
-		return -1;
-	}
-	host_info=gethostbyname(getenv("BROKER_HOST"));
-	// 2 alternativas
-	//memcpy(&dir.sin_addr.s_addr, host_info->h_addr, host_info->h_length);
-	dir.sin_addr=*(struct in_addr *)host_info->h_addr;
-	dir.sin_port=htons(atoi(getenv("BROKER_PORT")));
-	dir.sin_family=PF_INET;
-	if (connect(s, (struct sockaddr *)&dir, sizeof(dir)) < 0) {
-		perror("error en connect");
-		close(s);
-		return -1;
-	}
-	//
-	return s;
-
-}
-
-
-void prepararMensaje(char ** mensaje,const char *cola,char opc){
-	*mensaje= (char*)malloc(strlen(cola)+2);
-	//flag de op
-	(*mensaje)[0]=opc;
-	for(int i=1;i<strlen(cola);i++){
-		(*mensaje)[i]='\0';
-	}
-	//copiar nombre
-	for(int i=0;i<strlen(cola);i++){
-		(*mensaje)[(i+1)]=cola[i];
-	}
-	//
-	(*mensaje)[(strlen(cola))+1]='\0';
-
-
-
-}
 
 

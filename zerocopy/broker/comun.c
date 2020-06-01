@@ -4,6 +4,34 @@
  */
 #include "comun.h"
 
+//---------------------------------------------------------------------------------------------
+
+int obtenerSocket(){
+	int s;
+	struct sockaddr_in dir;
+	struct hostent *host_info;
+	if ((s=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+		perror("error creando socket");
+		return -1;
+	}
+	host_info=gethostbyname(getenv("BROKER_HOST"));
+	// 2 alternativas
+	//memcpy(&dir.sin_addr.s_addr, host_info->h_addr, host_info->h_length);
+	dir.sin_addr=*(struct in_addr *)host_info->h_addr;
+	dir.sin_port=htons(atoi(getenv("BROKER_PORT")));
+	dir.sin_family=PF_INET;
+	if (connect(s, (struct sockaddr *)&dir, sizeof(dir)) < 0) {
+		perror("error en connect");
+		close(s);
+		return -1;
+	}
+	//
+	return s;
+
+}
+
+//---------------------------------------------------------------------------------------------
+
 char * reverseString(char *s, int l){
  char * r=(char*)malloc((l+2)*sizeof(char));
  for(int i=0;i<l;i++){

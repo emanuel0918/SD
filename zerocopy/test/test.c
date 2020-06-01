@@ -7,13 +7,17 @@
 #include <fcntl.h>
 #include "zerocopyMQ.h"
 
+char * scan ();
 int main(int argc, char *argv[]) {
     int n;
     char *op, *cola;
+    //char *line;
     do {
         printf("\nSeleccione nombre de cola y operación (ctrl-D para terminar)\n\tC:create|D:destroy|P:put\n\tG:get no bloqueante|B:get bloqueante\n");
         op=cola=NULL;
         n=scanf("%ms%ms", &cola, &op);
+        //line=scan();
+        //int n=sscanf(line,"%s %s",cola,op);
         if (n==2) {
             switch(op[0]) {
                 case 'C':
@@ -82,3 +86,25 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+
+char *
+scan ()
+{
+  char * cadena;
+  char c;
+  int i = 0;
+  cadena = (char *) malloc (sizeof (char));
+  setbuf (stdin, NULL);
+  while (c != '\n')
+    {
+      c = getc (stdin);
+      if (c != '\n')
+	{
+	  cadena[i] = c;
+	  i++;
+	  cadena = (char *) realloc (cadena, sizeof (char) * (i + 1));
+	}
+    }
+  cadena[i] = '\0';
+  return cadena;
+}

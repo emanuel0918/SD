@@ -12,12 +12,18 @@
 #include <pthread.h>
 #include <string.h>
 #include <time.h>
-#define TAM_LONG 15
-#define TAM_COLA 256
-#define TAM_MENSAJE 32
+#define TAM_LONG 10
+//#define TAM_COLA 256*256
+//#define TAM_MENSAJE 32
 //#define VLEN 10
 //#define BUFSIZE 200
 //#define TIMEOUT 1
+
+//---------------------------------------------------------------------------------------------
+
+int obtenerSocket();
+//---------------------------------------------------------------------------------------------
+
 char * scan();
 char* subString (const char* input, int offset, int len, char* dest);
 int stringToInt(char * s);
