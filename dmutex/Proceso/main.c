@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
   int socket_p;
 	unsigned int tam_dir;
 	struct sockaddr_in dir;
+  //OTRO PROCESO
 	unsigned int tam_dir_otro;
   struct sockaddr_in dir_otro;
   //
@@ -154,7 +155,7 @@ int main(int argc, char* argv[])
   //
   for(;fgets(line,80,stdin);)
   {
-    if(!strcmp(line,"EXIT\n"))
+    if(!strcmp(line,"FINISH\n"))
       break;
 
     //GETCLOCK
@@ -190,10 +191,10 @@ int main(int argc, char* argv[])
       p->vector[p->pid]+=1;
       printf("%s: TICK\n",p->ID);
       port=obtener_port(ports,IDs,proc,length_process);
-      printf("Puerto: %d\n",port);
+      //printf("Puerto: %d\n",port);
       tam_dir_otro=sizeof(dir_otro);
-      //sendto(s, p, sizeof(p), 0,(struct sockaddr *)&dir_otro, tam_dir_otro);
-      //printf("%s: SEND(MSG,%s)\n",p->ID,proc);
+      sendto(socket_p, p, sizeof(p), 0,(struct sockaddr *)&dir_otro, tam_dir_otro);
+      printf("%s: SEND(MSG,%s)\n",p->ID,proc);
       //Limpiar buffer s
       //strcpy(line,"");
       strcpy(line2,"");
