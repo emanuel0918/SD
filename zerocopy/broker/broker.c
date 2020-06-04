@@ -83,17 +83,17 @@ int main(int argc, char *argv[]){
 void * servicio(void *arg){
 	int s, leido;
 	int error=0;
-	//
-	char * mensaje;
 	char op=0;
 	char opc[2];
 	//
+	char * sizeof_mensaje_s;
 	char sizeof_cola_s[TAM_LONG];
 	//
 	for(int i=0;i<TAM_LONG;i++){
 		sizeof_cola_s[i]='\0';
 	}
 	int sizeof_cola;
+	int sizeof_mensaje;
 
 	//
 	struct thread_data * t_d;
@@ -161,14 +161,74 @@ void * servicio(void *arg){
 
 				}else{
 					// FICH
-				
-					if ((leido=read(s, mensaje,sizeof(mensaje)))>0) {
-						printf("mensaje: %s\n",mensaje);
-					}
-					if (leido<0) {
-							perror("error en read4");
-							close(s);
-							return NULL;
+					switch(op){
+						case 'p':
+							while ((leido=read(s, sizeof_mensaje_s,sizeof(sizeof_mensaje_s)))>0) {
+								sizeof_mensaje=atoi(sizeof_mensaje_s);
+								//
+								//
+								
+								char mensaje[sizeof_mensaje+1];
+								for(int i=0;i<sizeof_mensaje+1;i++){
+									mensaje[i]='\0';
+								}
+								//printf("sizeof(mensaje) : %d\n",(int)sizeof(mensaje));
+								send(s,"0\0",(4*sizeof(char)),0);
+
+								//while ((leido=recv(s, mensaje, 256, MSG_WAITALL))>0){
+								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
+									//
+									dic_get(t_d->d,nombre_cola,&error);
+									if(error==-1){
+										send(s,"-1\0",(4*sizeof(char)),0);
+										perror("El registro no existe\n");
+									}else{
+										//push
+										cola_push_back(dic_get(t_d->d,nombre_cola,&error),(void *)(char *)mensaje);
+										send(s,"0\0",(4*sizeof(char)),0);
+									}
+								}
+								if (leido<0) {
+									perror("error en read5");
+									close(s);
+									return NULL;
+								}
+								//
+								//
+							}
+							if (leido<0) {
+									perror("error en read4");
+									close(s);
+									return NULL;
+							}
+
+							break;
+						case 'g':
+						case 'b':
+							//
+							dic_get(t_d->d,nombre_cola,&error);
+							if(error==-1){
+								send(s,"\000",sizeof(char),0);
+								perror("El registro no existe\n");
+							}else{
+								//pop
+								char *cadena;
+								cadena =(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error);
+								sizeof_mensaje_s=intToString(strlen(cadena));
+								send(s,sizeof_mensaje_s,sizeof(sizeof_mensaje_s),0);
+								char resp[4];
+								while ((leido=read(s, resp,sizeof(resp)))>0) {
+									send(s,cadena,sizeof(cadena),0);
+
+								}
+								if (leido<0) {
+									perror("error en read6");
+									close(s);
+									return NULL;
+								}
+								//send(s,cadena,sizeof(cadena),0);
+							}
+							break;
 					}
 
 				}

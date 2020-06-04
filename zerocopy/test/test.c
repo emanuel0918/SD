@@ -75,6 +75,7 @@ int main(int argc, char *argv[]) {
                     else
                         printf("escritura en la cola %s correcta\n", cola);
                     munmap(f, st.st_size);
+                    //printf("st.st_size : %d\n",(int)st.st_size);
                     break;
                 default:
                     printf("operación no válida\n");
