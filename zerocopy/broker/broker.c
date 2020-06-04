@@ -139,7 +139,7 @@ void * servicio(void *arg){
 								send(s,"0\0",(4*sizeof(char)),0);
 							}else{
 								send(s,"-1\0",(4*sizeof(char)),0);
-								printf("El registro ya existe\n");
+								perror("El registro ya existe\n");
 							}
 							break;
 
@@ -148,7 +148,7 @@ void * servicio(void *arg){
 							dic_get(t_d->d,nombre_cola,&error);
 							if(error==-1){
 								send(s,"-1\0",(4*sizeof(char)),0);
-								printf("El registro no existe\n");
+								perror("El registro no existe\n");
 							}else{
 								//free
 								free(dic_get(t_d->d,nombre_cola,&error));
