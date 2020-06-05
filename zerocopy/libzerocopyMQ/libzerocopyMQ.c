@@ -98,7 +98,6 @@ int put(const char *cola, const void *mensaje, uint32_t tam) {
 			close(s);
 			return atoi(respuesta);
 	}
-	//
 	return atoi(respuesta);
 }
 int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
