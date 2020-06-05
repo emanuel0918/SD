@@ -1,11 +1,4 @@
-/*
- * Incluya en este fichero todas las implementaciones que pueden
- * necesitar compartir el broker y la biblioteca, si es que las hubiera.
- */
 #include "comun.h"
-
-//---------------------------------------------------------------------------------------------
-
 int obtenerSocket(){
 	int s;
 	struct sockaddr_in dir;
@@ -15,8 +8,6 @@ int obtenerSocket(){
 		return -1;
 	}
 	host_info=gethostbyname(getenv("BROKER_HOST"));
-	// 2 alternativas
-	//memcpy(&dir.sin_addr.s_addr, host_info->h_addr, host_info->h_length);
 	dir.sin_addr=*(struct in_addr *)host_info->h_addr;
 	dir.sin_port=htons(atoi(getenv("BROKER_PORT")));
 	dir.sin_family=PF_INET;
@@ -25,12 +16,9 @@ int obtenerSocket(){
 		close(s);
 		return -1;
 	}
-	//
 	return s;
 
 }
-
-//---------------------------------------------------------------------------------------------
 
 char * reverseString(char *s, int l){
  char * r=(char*)malloc((l+2)*sizeof(char));
@@ -72,10 +60,8 @@ int stringToInt(char *s){
   l++;
   i++;
  }
- //printf("tamano es %d\n",l);
  i=0;
  while((c=s[i])!='\0'){
-  //printf("%d",(c-48));
   n=c-48;
   for(j=0,diez=1;j<(l-(i+1));j++){
    diez*=10;
@@ -83,7 +69,6 @@ int stringToInt(char *s){
   d+=n*diez;
   i++;
  }
- //printf("El valor es %d\n",d);
  return d;
 }
 
