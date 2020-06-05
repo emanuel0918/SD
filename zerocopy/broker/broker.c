@@ -8,7 +8,7 @@ struct thread_data{
 	long s_conect;
 	struct diccionario * d;
 	//char buff[6];
-	int cont;
+	//int cont;
 };
 
 int main(int argc, char *argv[]){
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 		return 1;
 	}
 	//strcpy(t_d->buff,"as000\0");
-	t_d->cont=0;
+	//t_d->cont=0;
 	//int error=0;
 	while (1) {
 		tam_dir=sizeof(dir_cliente);
@@ -89,7 +89,6 @@ void * servicio(void *arg){
 	char opc[2];
 	//
 	char sizeof_mensaje_s[TAM_LONG];
-	char *sizeof_mensaje_s1;
 	char sizeof_cola_s[TAM_LONG];
 	//
 	for(int i=0;i<TAM_LONG;i++){
@@ -102,13 +101,10 @@ void * servicio(void *arg){
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
-	if(t_d->cont>700000)
-		t_d->cont=0;
-	if(t_d->cont==2){
-
-		printf("mensaje : %s\n",(char*)cola_pop_front(dic_get(t_d->d,"c1",&error),&error));
-	}
-	t_d->cont++;
+	//if(t_d->cont>700000){
+		//t_d->cont=0;
+	//}
+	//t_d->cont++;
     //s=(long) arg;
 	s=t_d->s_conect;
 	
@@ -176,7 +172,7 @@ void * servicio(void *arg){
 								//
 								//
 								
-								char mensaje[sizeof_mensaje+1];
+								char *mensaje=malloc(sizeof_mensaje*sizeof(char));
 								for(int i=0;i<sizeof_mensaje+1;i++){
 									mensaje[i]='\0';
 								}
@@ -192,7 +188,7 @@ void * servicio(void *arg){
 										perror("El registro no existe\n");
 									}else{
 										//push
-										cola_push_back(dic_get(t_d->d,nombre_cola,&error),(void *)(char *)mensaje);
+										cola_push_back(dic_get(t_d->d,nombre_cola,&error),mensaje);
 										//printf("cadena : %s\n",(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error));
 										send(s,"0\0",(4*sizeof(char)),0);
 									}
@@ -216,21 +212,40 @@ void * servicio(void *arg){
 						case 'b':
 							//
 							dic_get(t_d->d,nombre_cola,&error);
+							char *cadena0=(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error);
 							if(error==-1){
 								send(s,"\000",sizeof(char),0);
 								perror("El registro no existe\n");
+								close(s);
+								return NULL;
 							}else{
 								//pop
+
+								int sizeof_cadena=strlen(cadena0);
+								char cadena[sizeof_cadena+1];
+
+								for(int i=0;i<sizeof_cadena+1;i++){
+									cadena[i]='\0';
+								}
+								strcpy(cadena,cadena0);
 								//strcpy(cadena,);
-								printf("mensaje : %s\n",(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error));
 								//
 
-								/*
-								sizeof_mensaje_s1=intToString(strlen(cadena));
-								send(s,sizeof_mensaje_s1,sizeof(sizeof_mensaje_s1),0);
+								
+								//char *sizeof_mensaje_s1=intToString(sizeof_cadena);
+								for(int i=0;i<TAM_LONG;i++){
+									sizeof_mensaje_s[i]='\0';
+								}
+								//for(int i=0;i<strlen(sizeof_mensaje_s1);i++){
+									//sizeof_mensaje_s[i]=sizeof_mensaje_s1[i];
+								//}
+								//strcpy(sizeof_mensaje_s,sizeof_mensaje_s1);
+								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
+								send(s,sizeof_mensaje_s,strlen(sizeof_mensaje_s),0);
 								char resp[4];
-								while ((leido=read(s, resp,sizeof(resp)))>0) {
-									send(s,cadena,sizeof(cadena),0);
+								while((leido=read(s, resp,sizeof(resp)))>0) {
+									send(s,cadena,(sizeof_cadena+1)*sizeof(char),0);
+									//printf("mensaje : %s\n",cadena);
 
 								}
 								if (leido<0) {
@@ -238,7 +253,7 @@ void * servicio(void *arg){
 									close(s);
 									return NULL;
 								}
-								*/
+								
 								send(s,"\000",sizeof(char),0);
 								//send(s,cadena,sizeof(cadena),0);
 							}

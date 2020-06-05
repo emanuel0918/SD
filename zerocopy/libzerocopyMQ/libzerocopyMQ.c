@@ -123,6 +123,10 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 	int s=obtenerSocket();
 	//
 	char sizeof_mensaje_s[TAM_LONG];
+	//inicializar cadena
+	for(int i=0;i<TAM_LONG;i++){
+		sizeof_mensaje_s[i]='\0';
+	}
 	char respuesta[4];
 	respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
 	//
@@ -139,16 +143,23 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
     	if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
 		//send cola
 		send(s,cola,strlen(cola),0);
-    	if ((leido=read(s, sizeof_mensaje_s,TAM_LONG))>0) {
+    	if((leido=read(s, sizeof_mensaje_s,TAM_LONG))>0) {
 			if(sizeof_mensaje_s[0]!='\000'){ 
+				//printf("sizeof_mensaje : %d\n",(int)strlen(sizeof_mensaje_s));
 				int sizeof_mensaje= atoi(sizeof_mensaje_s);
 				char mensaje_s[sizeof_mensaje+1];
 				for(int i=0;i<sizeof_mensaje+1;i++){
 					mensaje_s[i]='\0';
 				}
+				*mensaje=(char*)malloc(sizeof_mensaje*sizeof(char));
+				*tam=(uint32_t )sizeof_mensaje;
 				send(s,respuesta,sizeof(respuesta),0);
-				if((leido=read(s,mensaje_s,sizeof(mensaje_s))>0)){
-					*mensaje=(void **)&mensaje_s;
+				if((leido=read(s,mensaje_s,sizeof_mensaje)>0)){
+					//printf("cadena : %s\n",mensaje_s);
+					strcpy(*mensaje,mensaje_s);
+					respuesta[0]='0';respuesta[1]='\0';
+					return atoi(respuesta);
+					//mensaje=(void **)&mensaje_s;
 				}
 				if (leido<0) {
 					respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
