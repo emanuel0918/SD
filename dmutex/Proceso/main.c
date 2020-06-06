@@ -29,14 +29,16 @@ int main(int argc, char* argv[])
   int port;
   char line[80],proc[80];
   char **IDs;
-  int * sockets;
   struct sockaddr_in * sockets_bind;
   int *ports;
+  int *sockets;
   int socket_p;
+  int leido;
 	unsigned int tam_dir;
 	struct sockaddr_in dir;
   int index_proceso;
   void *mensaje;
+  int tam_mensaje;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -86,12 +88,13 @@ int main(int argc, char* argv[])
     if(!strcmp(line,"START\n"))
       break;
 
-    sscanf(line,"%[^:]: %d",proc,&port);
+    sscanf(line,"%[^:]: %d",proc,&port); //validar que no aumente length_process
     /* Habra que guardarlo en algun sitio */
     //
     //COPIAR PUERTO
     ports[length_process]=port;
     ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
+    sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
     //COPIAR CADENA
     IDs[length_process]=(char*)malloc(sizeof(char));
     l_p=0;
@@ -111,23 +114,32 @@ int main(int argc, char* argv[])
     if(!strcmp(proc,p->ID))
     { /* Este proceso soy yo */
       p->pid=length_process;
-      sockets[length_process]=socket_p; //proceso actual
-      sockets_bind[length_process]=dir;
+      sockets[length_process]=socket_p;
+      sockets_bind[length_process].sin_addr.s_addr=dir.sin_addr.s_addr;
+      sockets_bind[length_process].sin_port=dir.sin_port;
+      sockets_bind[length_process].sin_family=dir.sin_family;
+      
     }else{
       //
       //Socket s
+      if ((sockets[length_process]=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+        perror("error creando socket");
+        /*return 1;*/
+      }
       sockets_bind[length_process].sin_addr.s_addr=INADDR_ANY;
       sockets_bind[length_process].sin_port=htons(ports[length_process]);
       sockets_bind[length_process].sin_family=PF_INET;
+      
       if (bind(sockets[length_process], (struct sockaddr *)&sockets_bind[length_process], sizeof(sockets_bind[length_process])) < 0) {
-        perror("error en bind");
-        close(sockets[length_process]);
-        return 1;
+        //perror("error en bind");
+        //close(sockets[length_process]);
+        /*return 1;*/
       }
+      
     }
 
     sockets_bind=(struct sockaddr_in*)realloc(sockets_bind,(length_process+1)*sizeof(struct sockaddr_in));
-    sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
+    
   }
   //printf("Procesos %d\n",length_process);
   //imprimir_arreglo_ids(p,length_process);
@@ -165,7 +177,28 @@ int main(int argc, char* argv[])
     }
     //RECEIVE
     if(!strcmp(line,"RECEIVE\n")){
-      p->vector[p->pid]+=1;
+      tam_mensaje=sizeof(p->vector)+sizeof(int);
+      mensaje=malloc(tam_mensaje);
+      if((leido=recv(socket_p,mensaje,tam_mensaje,0))>0){
+        //perror("error en recv");
+
+      }
+      printf("%s: RECEIVE(MSG,%s)\n",p->ID,IDs[((int*)mensaje)[0]]);
+      /* Algoritmo de Vectores Logicos de Lamport */
+      for(int i=0;i<length_process;i++){
+        if(i==p->pid){
+          if(((int*)mensaje)[(i+1)] > p->vector[i]){
+            p->vector[i]=((int*)mensaje)[(i+1)];
+            p->vector[i]++;
+          }else{
+            p->vector[i]++;
+          }
+        }else{
+          if(((int*)mensaje)[(i+1)] > p->vector[i]){
+            p->vector[i]=((int*)mensaje)[(i+1)];
+          }
+        }
+      }
       printf("%s: TICK\n",p->ID);
     }
     //EVENT
@@ -185,10 +218,14 @@ int main(int argc, char* argv[])
       index_proceso=obtener_index(IDs,proc,length_process);
       //printf("Puerto: %d\n",port);
       tam_dir=sizeof(sockets_bind[index_proceso]);
-      sendto(socket_p, p->vector, sizeof(p->vector), 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
+      tam_mensaje=sizeof(int)+sizeof(p->vector);
+      mensaje=malloc(tam_mensaje);
+      for(int i=1;i<length_process+1;i++){
+        ((int*)mensaje)[i]=p->vector[(i-1)];
+      }
+      ((int*)mensaje)[0]=p->pid;
+      sendto(socket_p, mensaje, tam_mensaje, 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
       printf("%s: SEND(MSG,%s)\n",p->ID,proc);
-      //Limpiar buffer s
-      //strcpy(line,"");
       strcpy(line2,"");
       strcpy(proc,"");
     }
