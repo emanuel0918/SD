@@ -69,6 +69,7 @@ void * servicio(void *arg){
 	int error=0;
 	char op=0;
 	char opc[2];
+	int ITER;
 	char mensajito[TAM_PAQUETE];
 	for(int i=0;i<TAM_PAQUETE;i++){
 		mensajito[i]='\0';
@@ -184,17 +185,18 @@ void * servicio(void *arg){
 								}
 								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
 								send(s,sizeof_mensaje_s,strlen(sizeof_mensaje_s),0);
-								if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
-									if((tam+1)%TAM_PAQUETE==0){
-										ITER=(tam+1)/TAM_PAQUETE;
+								char resp[4];
+								if ((leido=read(s, resp,sizeof(resp)))>0) {
+									if((sizeof_mensaje+1)%TAM_PAQUETE==0){
+										ITER=(sizeof_mensaje+1)/TAM_PAQUETE;
 									}else{
-										ITER=tam/TAM_PAQUETE+1;
+										ITER=sizeof_mensaje/TAM_PAQUETE+1;
 									}
 									for(int i=0;i<ITER;i++){
-										if(write(s,mensaje,TAM_PAQUETE)<0){
-											respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+										if(write(s,cadena,TAM_PAQUETE)<0){
+											perror("error en read7");
 											close(s);
-											return atoi(respuesta);
+											return NULL;
 										}
 									}
 								}
