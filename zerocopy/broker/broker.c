@@ -69,6 +69,10 @@ void * servicio(void *arg){
 	int error=0;
 	char op=0;
 	char opc[2];
+	char mensajito[TAM_PAQUETE];
+	for(int i=0;i<TAM_PAQUETE;i++){
+		mensajito[i]='\0';
+	}
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
 	for(int i=0;i<TAM_LONG;i++){
@@ -128,7 +132,19 @@ void * servicio(void *arg){
 									mensaje[i]='\0';
 								}
 								send(s,"0\0",(4*sizeof(char)),0);
-								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
+								int j=0;
+								while ((leido=recv(s, mensajito,TAM_PAQUETE,MSG_WAITALL))>0) {
+									for(int i=0;i<TAM_PAQUETE;i++){
+										mensaje[j*256+i]=mensajito[i];
+									}
+									j++;
+								}
+								if (leido<0) {
+									perror("error en read5");
+									close(s);
+									return NULL;
+								}else{
+
 									dic_get(t_d->d,nombre_cola,&error);
 									if(error==-1){
 										send(s,"-1\0",(4*sizeof(char)),0);
@@ -137,11 +153,6 @@ void * servicio(void *arg){
 										cola_push_back(dic_get(t_d->d,nombre_cola,&error),mensaje);
 										send(s,"0\0",(4*sizeof(char)),0);
 									}
-								}
-								if (leido<0) {
-									perror("error en read5");
-									close(s);
-									return NULL;
 								}
 							}
 							if (leido<0) {
@@ -173,10 +184,19 @@ void * servicio(void *arg){
 								}
 								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
 								send(s,sizeof_mensaje_s,strlen(sizeof_mensaje_s),0);
-								char resp[4];
-								while((leido=read(s, resp,sizeof(resp)))>0) {
-									send(s,cadena,(sizeof_cadena+1)*sizeof(char),0);
-
+								if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
+									if((tam+1)%TAM_PAQUETE==0){
+										ITER=(tam+1)/TAM_PAQUETE;
+									}else{
+										ITER=tam/TAM_PAQUETE+1;
+									}
+									for(int i=0;i<ITER;i++){
+										if(write(s,mensaje,TAM_PAQUETE)<0){
+											respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
+											close(s);
+											return atoi(respuesta);
+										}
+									}
 								}
 								if (leido<0) {
 									perror("error en read6");

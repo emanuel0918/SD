@@ -47,6 +47,7 @@ int destroyMQ(const char *cola){
 int put(const char *cola, const void *mensaje, uint32_t tam) {
 
 	int s=obtenerSocket();
+	int ITER;
 	char respuesta[4];
 	respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
 	int leido;
@@ -64,15 +65,17 @@ int put(const char *cola, const void *mensaje, uint32_t tam) {
 				sizeof_mensaje_s=intToString(strlen(mensaje));
 				send(s,sizeof_mensaje_s,sizeof(sizeof_mensaje_s),0);
 				if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
-					send(s,mensaje,strlen(mensaje),0);
-					if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
-							close(s);
-							return atoi(respuesta);
+					if((tam+1)%TAM_PAQUETE==0){
+						ITER=(tam+1)/TAM_PAQUETE;
+					}else{
+						ITER=tam/TAM_PAQUETE+1;
 					}
-					if (leido<0) {
+					for(int i=0;i<ITER;i++){
+						if(write(s,mensaje,TAM_PAQUETE)<0){
 							respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
 							close(s);
 							return atoi(respuesta);
+						}
 					}
 				}
 				if (leido<0) {
@@ -103,6 +106,7 @@ int put(const char *cola, const void *mensaje, uint32_t tam) {
 int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 
 	int s=obtenerSocket();
+	int ITER;
 	char sizeof_mensaje_s[TAM_LONG];
 	for(int i=0;i<TAM_LONG;i++){
 		sizeof_mensaje_s[i]='\0';
@@ -128,16 +132,22 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 				}
 				*mensaje=(char*)malloc(sizeof_mensaje*sizeof(char));
 				*tam=(uint32_t )sizeof_mensaje;
-				send(s,respuesta,sizeof(respuesta),0);
-				if((leido=read(s,mensaje_s,sizeof_mensaje)>0)){
-					strcpy(*mensaje,mensaje_s);
-					respuesta[0]='0';respuesta[1]='\0';
-					return atoi(respuesta);
+				send(s,"0\0",(4*sizeof(char)),0);
+				int j=0;
+				while ((leido=recv(s, mensajito,TAM_PAQUETE,MSG_WAITALL))>0) {
+					for(int i=0;i<TAM_PAQUETE;i++){
+						mensaje[j*256+i]=mensajito[i];
+					}
+					j++;
 				}
 				if (leido<0) {
 					respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
-						close(s);
-						return atoi(respuesta);
+					close(s);
+					return atoi(respuesta);
+				}else{
+					strcpy(*mensaje,mensaje_s);
+					respuesta[0]='0';respuesta[1]='\0';
+					return atoi(respuesta);
 				}
 			}else{
 				respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';

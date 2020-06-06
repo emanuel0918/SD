@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #define TAM_LONG 10
+#define TAM_PAQUETE 256
 
 int obtenerSocket();
 char * scan();
