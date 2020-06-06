@@ -20,6 +20,10 @@ int main(int argc, char *argv[]){
 	int error=0;
 	char op=0;
 	char opc[2];
+	char mensajito[TAM_PAQUETE];
+	for(int i=0;i<TAM_PAQUETE;i++){
+		mensajito[i]='\0';
+	}
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
 	for(int i=0;i<TAM_LONG;i++){
@@ -114,7 +118,18 @@ int main(int argc, char *argv[]){
 										mensaje[i]='\0';
 									}
 									send(s_conect,"0\0",(4*sizeof(char)),0);
-									while ((leido=read(s_conect, mensaje,sizeof_mensaje))>0) {
+									int j=0;
+									while ((leido=recv(s, mensajito,TAM_PAQUETE,MSG_WAITALL))>0) {
+										for(int i=0;i<TAM_PAQUETE;i++){
+											mensaje[j*TAM_PAQUETE+i]=mensajito[i];
+										}
+										j++;
+									}
+									if (leido<0) {
+										perror("error en read5");
+										close(s);
+										return 1;
+									}else{
 										dic_get(d,nombre_cola,&error);
 										if(error==-1){
 											send(s_conect,"-1\0",(4*sizeof(char)),0);
@@ -123,11 +138,6 @@ int main(int argc, char *argv[]){
 											cola_push_back(dic_get(d,nombre_cola,&error),mensaje);
 											send(s_conect,"0\0",(4*sizeof(char)),0);
 										}
-									}
-									if (leido<0) {
-										perror("error en read5");
-										close(s_conect);
-										return 1;
 									}
 								}
 								if (leido<0) {
