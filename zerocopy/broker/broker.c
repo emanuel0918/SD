@@ -135,7 +135,7 @@ void * servicio(void *arg){
 								int j=0;
 								while ((leido=recv(s, mensajito,TAM_PAQUETE,MSG_WAITALL))>0) {
 									for(int i=0;i<TAM_PAQUETE;i++){
-										mensaje[j*256+i]=mensajito[i];
+										mensaje[j*TAM_PAQUETE+i]=mensajito[i];
 									}
 									j++;
 								}

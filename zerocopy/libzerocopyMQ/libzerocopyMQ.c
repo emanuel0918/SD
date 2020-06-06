@@ -106,7 +106,10 @@ int put(const char *cola, const void *mensaje, uint32_t tam) {
 int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 
 	int s=obtenerSocket();
-	int ITER;
+	char mensajito[TAM_PAQUETE];
+	for(int i=0;i<TAM_PAQUETE;i++){
+		mensajito[i]='\0';
+	}
 	char sizeof_mensaje_s[TAM_LONG];
 	for(int i=0;i<TAM_LONG;i++){
 		sizeof_mensaje_s[i]='\0';
@@ -136,7 +139,7 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 				int j=0;
 				while ((leido=recv(s, mensajito,TAM_PAQUETE,MSG_WAITALL))>0) {
 					for(int i=0;i<TAM_PAQUETE;i++){
-						mensaje[j*256+i]=mensajito[i];
+						mensaje_s[j*TAM_PAQUETE+i]=mensajito[i];
 					}
 					j++;
 				}
