@@ -2,6 +2,17 @@
 #include "comun.h"
 #include "diccionario.h"
 #include "cola.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include <time.h>
+#define TAM_LONG 10
+#define TAM_PAQUETE 256
+
 
 void * servicio(void *arg);
 struct thread_data{

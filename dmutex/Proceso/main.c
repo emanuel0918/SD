@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
 	struct sockaddr_in dir;
   int index_proceso;
   void *mensaje;
+  int sscanf_success;
   int tam_mensaje;
   if(argc<2)
   {
@@ -83,63 +84,66 @@ int main(int argc, char* argv[])
 
 
 
-  for(;fgets(line,80,stdin);length_process++)
+  for(;fgets(line,80,stdin);/* length_process++ */)
   {
     if(!strcmp(line,"START\n"))
       break;
 
-    sscanf(line,"%[^:]: %d",proc,&port); //validar que no aumente length_process
-    /* Habra que guardarlo en algun sitio */
-    //
-    //COPIAR PUERTO
-    ports[length_process]=port;
-    ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
-    sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
-    //COPIAR CADENA
-    IDs[length_process]=(char*)malloc(sizeof(char));
-    l_p=0;
-    c=proc[0];
-    while(c!='\000'){
-      c=proc[l_p];
-      IDs[length_process][l_p]=c;
-      l_p++;
-      IDs[length_process]=(char *) realloc (IDs[length_process], sizeof (char) * (l_p + 1));
-    }
-    //
-    IDs=(char **)realloc(IDs,(length_process+1)*sizeof(char*));
-    //
-    //
-    //
-
-    if(!strcmp(proc,p->ID))
-    { /* Este proceso soy yo */
-      p->pid=length_process;
-      sockets[length_process]=socket_p;
-      sockets_bind[length_process].sin_addr.s_addr=dir.sin_addr.s_addr;
-      sockets_bind[length_process].sin_port=dir.sin_port;
-      sockets_bind[length_process].sin_family=dir.sin_family;
-      
-    }else{
+    sscanf_success=sscanf(line,"%[^:]: %d",proc,&port); //validar que no aumente length_process
+    //printf("sscanf_success : %d\n",sscanf_success);
+    if(sscanf_success==2){
+      /* Habra que guardarlo en algun sitio */
       //
-      //Socket s
-      if ((sockets[length_process]=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-        perror("error creando socket");
-        /*return 1;*/
+      //COPIAR PUERTO
+      ports[length_process]=port;
+      ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
+      sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
+      //COPIAR CADENA
+      IDs[length_process]=(char*)malloc(sizeof(char));
+      l_p=0;
+      c=proc[0];
+      while(c!='\000'){
+        c=proc[l_p];
+        IDs[length_process][l_p]=c;
+        l_p++;
+        IDs[length_process]=(char *) realloc (IDs[length_process], sizeof (char) * (l_p + 1));
       }
-      sockets_bind[length_process].sin_addr.s_addr=INADDR_ANY;
-      sockets_bind[length_process].sin_port=htons(ports[length_process]);
-      sockets_bind[length_process].sin_family=PF_INET;
-      
-      if (bind(sockets[length_process], (struct sockaddr *)&sockets_bind[length_process], sizeof(sockets_bind[length_process])) < 0) {
-        //perror("error en bind");
-        //close(sockets[length_process]);
-        /*return 1;*/
-      }
-      
-    }
+      //
+      IDs=(char **)realloc(IDs,(length_process+1)*sizeof(char*));
+      //
+      //
+      //
 
-    sockets_bind=(struct sockaddr_in*)realloc(sockets_bind,(length_process+1)*sizeof(struct sockaddr_in));
-    
+      if(!strcmp(proc,p->ID))
+      { /* Este proceso soy yo */
+        p->pid=length_process;
+        sockets[length_process]=socket_p;
+        sockets_bind[length_process].sin_addr.s_addr=dir.sin_addr.s_addr;
+        sockets_bind[length_process].sin_port=dir.sin_port;
+        sockets_bind[length_process].sin_family=dir.sin_family;
+        
+      }else{
+        //
+        //Socket s
+        if ((sockets[length_process]=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+          perror("error creando socket");
+          /*return 1;*/
+        }
+        sockets_bind[length_process].sin_addr.s_addr=INADDR_ANY;
+        sockets_bind[length_process].sin_port=htons(ports[length_process]);
+        sockets_bind[length_process].sin_family=PF_INET;
+        
+        if (bind(sockets[length_process], (struct sockaddr *)&sockets_bind[length_process], sizeof(sockets_bind[length_process])) < 0) {
+          //perror("error en bind");
+          //close(sockets[length_process]);
+          /*return 1;*/
+        }
+        
+      }
+
+      sockets_bind=(struct sockaddr_in*)realloc(sockets_bind,(length_process+1)*sizeof(struct sockaddr_in));
+      length_process++;
+    }
   }
   //printf("Procesos %d\n",length_process);
   //imprimir_arreglo_ids(p,length_process);
@@ -220,8 +224,8 @@ int main(int argc, char* argv[])
       tam_dir=sizeof(sockets_bind[index_proceso]);
       tam_mensaje=sizeof(int)+sizeof(p->vector);
       mensaje=malloc(tam_mensaje);
-      for(int i=1;i<length_process+1;i++){
-        ((int*)mensaje)[i]=p->vector[(i-1)];
+      for(int i=0;i<length_process;i++){
+        ((int*)mensaje)[i+1]=p->vector[i];
       }
       ((int*)mensaje)[0]=p->pid;
       sendto(socket_p, mensaje, tam_mensaje, 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
