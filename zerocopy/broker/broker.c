@@ -85,7 +85,7 @@ void * servicio(void *arg){
 
 		while ((leido=read(s, sizeof_cola_s,sizeof(sizeof_cola_s)))>0) {
 			sizeof_cola=atoi(sizeof_cola_s);
-			char nombre_cola[sizeof_cola+1];
+			char *nombre_cola=(char*)malloc(sizeof_cola+1);
 			for(int i=0;i<sizeof_cola+1;i++){
 				nombre_cola[i]='\0';
 			}

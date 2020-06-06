@@ -111,7 +111,13 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 	respuesta[0]='-';respuesta[1]='1';respuesta[2]='\0';
 	int leido;
 	char opcion[2];
-	opcion[0]='g';opcion[2]='\0';
+	if(blocking){
+		opcion[0]='b';
+	}else{
+		opcion[0]='g';
+	}
+	
+	opcion[2]='\0';
 	send(s,opcion,2*sizeof(char),0);
     if ((leido=read(s, respuesta,sizeof(respuesta)))>0) {
 		char * sizeof_cola_s;
