@@ -23,36 +23,28 @@ struct process_d{
   int * vector;
 };
 void imprimir_arreglo_ids(char ** IDs,int length_process);
-int obtener_port(int *ports,char ** IDs,char * ID,int length_process);
+int obtener_index(char ** IDs,char * ID,int length_process);
 int main(int argc, char* argv[])
 {
   int port;
   char line[80],proc[80];
-  //
   char **IDs;
+  int * sockets;
+  struct sockaddr_in * sockets_bind;
   int *ports;
-  //
   int socket_p;
 	unsigned int tam_dir;
 	struct sockaddr_in dir;
-  //OTRO PROCESO
-	unsigned int tam_dir_otro;
-  struct sockaddr_in dir_otro;
-  //
-
+  int index_proceso;
+  void *mensaje;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
     return 1;
   }
-
-  /* Establece el modo buffer de entrada/salida a linea */
   setvbuf(stdout,(char*)malloc(sizeof(char)*80),_IOLBF,80);
   setvbuf(stdin,(char*)malloc(sizeof(char)*80),_IOLBF,80);
-  //
-  //
-  //DEFINIR EL SOCKET UDP
-	if ((socket_p=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+  if ((socket_p=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
 		perror("error creando socket");
 		return 1;
 	}
@@ -70,16 +62,7 @@ int main(int argc, char* argv[])
 		puerto_udp=ntohs(dir.sin_port);
 
 	}
-  //
-  //puerto_udp=1111; 
-  /* Se determina el puerto UDP que corresponda.
-                      Dicho puerto debe estar libre y quedara
-                      reservado por dicho proceso. */
-  //
-  //Inicializar struct
   struct process_d * p=(struct process_d*)malloc(sizeof(struct process_d));
-  //Copiar valor
-  //
   p->ID=(char *)malloc(sizeof(char));
   int l_p=0;
   char c =argv[1][0];
@@ -89,17 +72,11 @@ int main(int argc, char* argv[])
     l_p++;
     p->ID=(char *) realloc (p->ID, sizeof (char) * (l_p + 1));
   }
-  //
-  //
-
   fprintf(stdout,"%s: %d\n",p->ID,puerto_udp);
-
-  //
-  //ARREGLO DE IDS de los demas procesos
   IDs=(char **)malloc(sizeof(char*));
-  //ARREGLO DE puertos udp de los demas procesos
   ports=(int*)malloc(sizeof(int));
-  // longitud de tamanio de n de procesos
+  sockets=(int*)malloc(sizeof(int));
+  sockets_bind=(struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
   int length_process=0;
 
 
@@ -115,7 +92,6 @@ int main(int argc, char* argv[])
     //COPIAR PUERTO
     ports[length_process]=port;
     ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
-    //
     //COPIAR CADENA
     IDs[length_process]=(char*)malloc(sizeof(char));
     l_p=0;
@@ -135,7 +111,23 @@ int main(int argc, char* argv[])
     if(!strcmp(proc,p->ID))
     { /* Este proceso soy yo */
       p->pid=length_process;
+      sockets[length_process]=socket_p; //proceso actual
+      sockets_bind[length_process]=dir;
+    }else{
+      //
+      //Socket s
+      sockets_bind[length_process].sin_addr.s_addr=INADDR_ANY;
+      sockets_bind[length_process].sin_port=htons(ports[length_process]);
+      sockets_bind[length_process].sin_family=PF_INET;
+      if (bind(sockets[length_process], (struct sockaddr *)&sockets_bind[length_process], sizeof(sockets_bind[length_process])) < 0) {
+        perror("error en bind");
+        close(sockets[length_process]);
+        return 1;
+      }
     }
+
+    sockets_bind=(struct sockaddr_in*)realloc(sockets_bind,(length_process+1)*sizeof(struct sockaddr_in));
+    sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
   }
   //printf("Procesos %d\n",length_process);
   //imprimir_arreglo_ids(p,length_process);
@@ -190,10 +182,10 @@ int main(int argc, char* argv[])
     if(!strcmp(line2,"MESSAGETO")){
       p->vector[p->pid]+=1;
       printf("%s: TICK\n",p->ID);
-      port=obtener_port(ports,IDs,proc,length_process);
+      index_proceso=obtener_index(IDs,proc,length_process);
       //printf("Puerto: %d\n",port);
-      tam_dir_otro=sizeof(dir_otro);
-      sendto(socket_p, p, sizeof(p), 0,(struct sockaddr *)&dir_otro, tam_dir_otro);
+      tam_dir=sizeof(sockets_bind[index_proceso]);
+      sendto(socket_p, p->vector, sizeof(p->vector), 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
       printf("%s: SEND(MSG,%s)\n",p->ID,proc);
       //Limpiar buffer s
       //strcpy(line,"");
@@ -212,17 +204,15 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-int obtener_port(int * ports,char ** IDs,char * ID,int length_process){
+int obtener_index(char ** IDs,char * ID,int length_process){
   int index=0;
-  int port;
   for(int i=0;i<length_process;i++){
     if(!strcmp(ID,IDs[i])){
       index=i;
       break;
     }
   }
-  port=ports[index];
-  return port;
+  return index;
 }
 
 void imprimir_arreglo_ids(char ** IDs,int length_process){
