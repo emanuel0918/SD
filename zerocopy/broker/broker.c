@@ -88,7 +88,7 @@ void * servicio(void *arg){
 	int error=0;
 	char op=0;
 	char opc[2];
-	struct iovec iov[3];
+	void * memoria_dinamica=malloc(sizeof(char));
 	//
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
@@ -111,19 +111,21 @@ void * servicio(void *arg){
 	s=t_d->s_conect;
 	
 	//
+	while((leido=read(s,memoria_dinamica,TAM_PAQUETE))>0){
 
-    while ((leido=readv(s, iov,3))>0) {
-
-		op=opc[0];
-
-		printf("iovec[0] : %d\niovec[1] : %d\n",(int)iov[0].iov_len,(int)iov[1].iov_len);
+		printf("opc : %s\n",((char*)memoria_dinamica));
+		op=((char*)memoria_dinamica)[0];
+		char * nombre_cola=(char*)malloc((sizeof(memoria_dinamica)-1)*sizeof(char));
+		strcpy(nombre_cola+sizeof(char),memoria_dinamica);
+		printf("op: %c\nnombre_cola : %s\n",op,nombre_cola);
+		send(s,"0\0",(4*sizeof(char)),0);
 	}
 	if (leido<0) {
 			perror("error en read1");
+			send(s,"-1\0",(4*sizeof(char)),0);
 			close(s);
 			return NULL;
 	}
-	//
 	
 	close(s);
 	return NULL;
