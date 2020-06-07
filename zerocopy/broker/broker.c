@@ -134,7 +134,7 @@ void * servicio(void *arg){
 			char *nombre_cola=malloc(sizeof_cola);
 			//printf("sizeof(nombre_cola) : %d\n",(int)sizeof(nombre_cola));
 			while ((leido=recv(s, nombre_cola,sizeof_cola,MSG_WAITALL))>0) {
-				printf("opc: %c\n%s\n",op,nombre_cola);
+				//printf("opc: %c\n%s\n",op,nombre_cola);
 				//
 				//
 				if(op=='c' || op=='d'){
@@ -193,7 +193,7 @@ void * servicio(void *arg){
 								for( i=0;i<sizeof_mensaje;i++){
 									mensaje[i]='\0';
 								}
-								printf("sizeof(mensaje) : %d\n",(int)sizeof_mensaje);
+								//printf("sizeof(mensaje) : %d\n",(int)sizeof_mensaje);
 
 								//while ((leido=recv(s, mensaje, 256, MSG_WAITALL))>0){
 								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
@@ -244,8 +244,8 @@ void * servicio(void *arg){
 								//pop
 
 								int sizeof_cadena=strlen(cadena0);
-								sizeof_cadena-=1;
-								printf("sizeof_cadena : %d\n",sizeof_cadena);
+								sizeof_cadena+=1;
+								//printf("sizeof_cadena : %d\n",sizeof_cadena);
 
 								struct iovec iov[2];
 								char cadena[sizeof_cadena];

@@ -128,11 +128,14 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 					mensaje_s[i]='\0';
 				}
 				*mensaje=(char*)malloc(sizeof_mensaje*sizeof(char));
-				*tam=(uint32_t )sizeof_mensaje;
-				printf("sizeof_mensaje : %d\n",sizeof_mensaje);
+				*tam=(uint32_t )sizeof_mensaje-2;
+				//printf("sizeof_mensaje : %d\n",sizeof_mensaje);
 				if((leido=read(s,mensaje_s,sizeof_mensaje)>0)){
-					printf("cadena : %s\n",mensaje_s);
-					strcpy(*mensaje,mensaje_s);
+					//printf("cadena : %s\n",mensaje_s);
+					//strcpy(*mensaje,mensaje_s);
+					for(i=0;i<sizeof_mensaje-2;i++){
+						((char*)*mensaje)[i]=mensaje_s[i];
+					}
 					respuesta[0]='0';respuesta[1]='\0';
 					return atoi(respuesta);
 					//mensaje=(void **)&mensaje_s;
