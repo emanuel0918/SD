@@ -71,7 +71,8 @@ int main(int argc, char *argv[]){
 			close(s);
 			return 1;
 		}
-		pthread_create(&thid, &atrib_th, servicio, (void *)(struct thread_data *)t_d);
+		//pthread_create(&thid, &atrib_th, servicio, (void *)(struct thread_data *)t_d);
+		servicio ((void *)(struct thread_data *)t_d);
 		//printf("mensaje : %s\n",(char*)cola_pop_front(dic_get(t_d->d,"c1",&error),&error));
 		//printf("desps del read %s\n",t_d->buf);
 
@@ -81,6 +82,7 @@ int main(int argc, char *argv[]){
 	}
 
 	close(s);
+	return 0;
 }
 void * servicio(void *arg){
 	int i;
@@ -113,22 +115,25 @@ void * servicio(void *arg){
 	pero
 	
 	*/
-    if ((leido1=read(s, opc,2))>0) {
+    while ((leido=recv(s, opc,2,MSG_CONFIRM | MSG_WAITALL))>0) {
 		op=opc[0];
 
-		if ((leido2=read(s, sizeof_cola_s,TAM_LONG))>0) {
+		while ((leido=recv(s, sizeof_cola_s,TAM_LONG,MSG_CONFIRM | MSG_WAITALL))>0) {
 			sizeof_cola=atoi(sizeof_cola_s);
 			sizeof_cola+=1;
 			//printf("Prueba%d\nsizeof_cola: %d\n",t_d->cont,sizeof_cola);
 
 			//
 			
+/*
 			char nombre_cola[sizeof_cola];
 			for( i=0;i<sizeof_cola;i++){
 				nombre_cola[i]='\0';
 			}
+*/
+			char *nombre_cola=malloc(sizeof_cola);
 			//printf("sizeof(nombre_cola) : %d\n",(int)sizeof(nombre_cola));
-			if ((leido3=read(s, nombre_cola,sizeof_cola))>0) {
+			while ((leido=recv(s, nombre_cola,sizeof_cola,MSG_WAITALL))>0) {
 				printf("opc: %c\n%s\n",op,nombre_cola);
 				//
 				//
@@ -141,9 +146,15 @@ void * servicio(void *arg){
 							if(error==-1){
 								dic_put(t_d->d,nombre_cola,(void*)(struct cola *)cola_create());
 								send(s,"0\0",(4*sizeof(char)),0);
+
+								close(s);
+								return NULL;
 							}else{
 								send(s,"-1\0",(4*sizeof(char)),0);
 								perror("El registro ya existe\n");
+
+								close(s);
+								return NULL;
 							}
 							break;
 
@@ -153,12 +164,18 @@ void * servicio(void *arg){
 							if(error==-1){
 								send(s,"-1\0",(4*sizeof(char)),0);
 								perror("El registro no existe\n");
+
+								close(s);	
+								return NULL;
 							}else{
 								//free
 								free(dic_get(t_d->d,nombre_cola,&error));
 								//remover registro
 								dic_remove_entry(t_d->d,nombre_cola,NULL);
 								send(s,"0\0",(4*sizeof(char)),0);
+
+								close(s);
+								return NULL;
 							}
 							break;
 					}
@@ -185,11 +202,17 @@ void * servicio(void *arg){
 									if(error==-1){
 										send(s,"-1\0",(4*sizeof(char)),0);
 										perror("El registro no existe\n");
+
+										close(s);
+										return NULL;
 									}else{
 										//push
 										cola_push_back(dic_get(t_d->d,nombre_cola,&error),mensaje);
 										//printf("cadena : %s\n",(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error));
 										send(s,"0\0",(4*sizeof(char)),0);
+
+										close(s);
+										return NULL;
 									}
 								}
 								if (leido<0) {
@@ -220,12 +243,14 @@ void * servicio(void *arg){
 							}else{
 								//pop
 
-								struct iovec iov[2];
-
 								int sizeof_cadena=strlen(cadena0);
-								char cadena[sizeof_cadena+1];
+								sizeof_cadena-=1;
+								printf("sizeof_cadena : %d\n",sizeof_cadena);
 
-								for( i=0;i<sizeof_cadena+1;i++){
+								struct iovec iov[2];
+								char cadena[sizeof_cadena];
+
+								for( i=0;i<sizeof_cadena;i++){
 									cadena[i]='\0';
 								}
 								strcpy(cadena,cadena0);
@@ -234,19 +259,25 @@ void * servicio(void *arg){
 
 								
 								//char *sizeof_mensaje_s1=intToString(sizeof_cadena);
-								for( i=0;i<TAM_LONG;i++){
-									sizeof_mensaje_s[i]='\0';
-								}
 								//for( i=0;i<strlen(sizeof_mensaje_s1);i++){
 									//sizeof_mensaje_s[i]=sizeof_mensaje_s1[i];
 								//}
 								//strcpy(sizeof_mensaje_s,sizeof_mensaje_s1);
-								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
+								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena);
 								iov[0].iov_base=sizeof_mensaje_s;
 								iov[0].iov_len=TAM_LONG;
 								iov[1].iov_base=cadena;
-								iov[1].iov_base=strlen(cadena)+1;
+								iov[1].iov_len=sizeof_mensaje-1;
 								while((leido9=writev(s,iov,2))>0){
+									//send(s,"0\0",(4*sizeof(char)),0);
+									close(s);
+									return NULL;
+								}
+								if(leido9<0){
+
+									send(s,"-1\0",(4*sizeof(char)),0);
+									close(s);
+									return NULL;
 								}
 								
 								//send(s,cadena,sizeof(cadena),0);
@@ -255,7 +286,6 @@ void * servicio(void *arg){
 					}
 
 				}
-				printf("opc: %c\n%s\n",op,nombre_cola);
 			}
 			if (leido<0) {
 					perror("error en read3");

@@ -24,8 +24,9 @@ int obtenerSocket(){
 }
 
 char * reverseString(char *s, int l){
+int i;
  char * r=(char*)malloc((l+2)*sizeof(char));
- for(int i=0;i<l;i++){
+ for( i=0;i<l;i++){
   r[(l-(i+1))]=s[i];
  }
  r[l]='\0';
