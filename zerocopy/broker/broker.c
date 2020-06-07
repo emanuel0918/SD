@@ -83,15 +83,11 @@ int main(int argc, char *argv[]){
 	close(s);
 }
 void * servicio(void *arg){
+	int s, leido;
 	int i;
-	int s;
 	int error=0;
-	int leido;
-	int leido1,leido2,leido3,leido4,leido5,leido6,leido8,leido9;
 	char op=0;
 	char opc[2];
-	char resp1[2];
-	void * memoria_dinamica=malloc(sizeof(char));
 	//
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
@@ -106,30 +102,34 @@ void * servicio(void *arg){
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
+	//if(t_d->cont>700000){
+		//t_d->cont=0;
+	//}
+	//t_d->cont++;
+    //s=(long) arg;
 	s=t_d->s_conect;
-	/*
-	LA MEMORIA DINAMICA QUE QUIERO DEBE CONTENER EL
-	iovec[3]
-	pero
 	
-	*/
-    while ((leido=recv(s, opc,2,MSG_CONFIRM | MSG_WAITALL))>0) {
-		op=opc[0];
+	//
 
-		while ((leido=recv(s, sizeof_cola_s,TAM_LONG,MSG_CONFIRM | MSG_WAITALL))>0) {
+    while ((leido=read(s, opc,sizeof(opc)))>0) {
+		op=opc[0];
+		send(s,"0\0",(4*sizeof(char)),0);
+
+		while ((leido=read(s, sizeof_cola_s,sizeof(sizeof_cola_s)))>0) {
 			sizeof_cola=atoi(sizeof_cola_s);
-			sizeof_cola+=1;
+			//sizeof_cola+=2;
 			//printf("Prueba%d\nsizeof_cola: %d\n",t_d->cont,sizeof_cola);
 
 			//
 			
-			char nombre_cola[sizeof_cola];
-			for( i=0;i<sizeof_cola;i++){
+			char nombre_cola[sizeof_cola+1];
+			for( i=0;i<sizeof_cola+1;i++){
 				nombre_cola[i]='\0';
 			}
 			//printf("sizeof(nombre_cola) : %d\n",(int)sizeof(nombre_cola));
-			while ((leido=recv(s, nombre_cola,sizeof_cola,MSG_WAITALL))>0) {
-				printf("opc: %c\n%s\n",op,nombre_cola);
+			send(s,"0\0",(4*sizeof(char)),0);
+			while ((leido=read(s, nombre_cola,sizeof_cola))>0) {
+				//printf("opc: %c\n%s\n",op,nombre_cola);
 				//
 				//
 				if(op=='c' || op=='d'){
@@ -167,16 +167,18 @@ void * servicio(void *arg){
 					// FICH
 					switch(op){
 						case 'p':
-							while ((leido=read(s, sizeof_mensaje_s,TAM_LONG))>0) {
-								sizeof_mensaje=atoi(sizeof_mensaje_s)+1;
+							send(s,"0\0",(4*sizeof(char)),0);
+							while ((leido=read(s, sizeof_mensaje_s,sizeof(sizeof_mensaje_s)))>0) {
+								sizeof_mensaje=atoi(sizeof_mensaje_s);
 								//
 								//
 								
 								char *mensaje=malloc(sizeof_mensaje*sizeof(char));
-								for( i=0;i<sizeof_mensaje;i++){
+								for( i=0;i<sizeof_mensaje+1;i++){
 									mensaje[i]='\0';
 								}
-								printf("sizeof(mensaje) : %d\n",(int)sizeof_mensaje);
+								//printf("sizeof(mensaje) : %d\n",(int)sizeof(mensaje));
+								send(s,"0\0",(4*sizeof(char)),0);
 
 								//while ((leido=recv(s, mensaje, 256, MSG_WAITALL))>0){
 								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
@@ -220,8 +222,6 @@ void * servicio(void *arg){
 							}else{
 								//pop
 
-								struct iovec iov[2];
-
 								int sizeof_cadena=strlen(cadena0);
 								char cadena[sizeof_cadena+1];
 
@@ -242,13 +242,20 @@ void * servicio(void *arg){
 								//}
 								//strcpy(sizeof_mensaje_s,sizeof_mensaje_s1);
 								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
-								iov[0].iov_base=sizeof_mensaje_s;
-								iov[0].iov_len=TAM_LONG;
-								iov[1].iov_base=cadena;
-								iov[1].iov_base=strlen(cadena)+1;
-								while((leido9=writev(s,iov,2))>0){
+								send(s,sizeof_mensaje_s,strlen(sizeof_mensaje_s),0);
+								char resp[4];
+								while((leido=read(s, resp,sizeof(resp)))>0) {
+									send(s,cadena,(sizeof_cadena+1)*sizeof(char),0);
+									//printf("mensaje : %s\n",cadena);
+
+								}
+								if (leido<0) {
+									perror("error en read6");
+									close(s);
+									return NULL;
 								}
 								
+								send(s,"\000",sizeof(char),0);
 								//send(s,cadena,sizeof(cadena),0);
 							}
 							break;
@@ -273,6 +280,8 @@ void * servicio(void *arg){
 			close(s);
 			return NULL;
 	}
+	//
+	
 	close(s);
 	return NULL;
 
