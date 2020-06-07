@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
   void *mensaje;
   int sscanf_success;
   int tam_mensaje;
-  int tam_IDs=0;
+  int TAM_MAXIMO=200;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -77,9 +77,9 @@ int main(int argc, char* argv[])
     p->ID=(char *) realloc (p->ID, sizeof (char) * (l_p + 1));
   }
   fprintf(stdout,"%s: %d\n",p->ID,puerto_udp);
-  IDs=(char **)malloc(4096);
-  ports=(int*)malloc(sizeof(int));
-  sockets=(int*)malloc(sizeof(int));
+  IDs=(char **)malloc(TAM_MAXIMO*80);
+  ports=(int*)malloc(TAM_MAXIMO*sizeof(int));
+  sockets=(int*)malloc(TAM_MAXIMO*sizeof(int));
   sockets_bind=(struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
   int length_process=0;
 
@@ -97,8 +97,8 @@ int main(int argc, char* argv[])
       //
       //COPIAR PUERTO
       ports[length_process]=port;
-      ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
-      sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
+      //ports=(int *)realloc(ports,(length_process+1)*sizeof(int));
+      //sockets=(int *)realloc(sockets,(length_process+1)*sizeof(int));
       //COPIAR CADENA
       IDs[length_process]=(char*)malloc(sizeof(char));
       l_p=0;
@@ -108,9 +108,10 @@ int main(int argc, char* argv[])
         IDs[length_process][l_p]=c;
         l_p++;
         IDs[length_process]=(char *) realloc (IDs[length_process], sizeof (char) * (l_p + 1));
+        //IDs=(char **)realloc(IDs,sizeof(IDs)+sizeof(IDs[length_process]));
       }
       //
-      //IDs=(char **)realloc(IDs,(length_process+1)*sizeof(char*));
+      //IDs=(char **)realloc(IDs,sizeof(IDs)+sizeof(IDs[length_process]));
       //
       //
       //
