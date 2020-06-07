@@ -161,4 +161,3 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 	return atoi(respuesta);
 }
 
-
