@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <time.h>
+#include <sys/uio.h>
 #define TAM_LONG 10
 #define TAM_PAQUETE 256
 int obtenerSocket();
@@ -16,3 +17,4 @@ int stringToInt(char * s);
 char * intToString(long n);
 char * reverseString(char *s,int l);
 char rand_char();
+

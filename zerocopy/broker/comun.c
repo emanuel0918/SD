@@ -1,4 +1,6 @@
+#define _BSD_SOURCE
 #include "comun.h"
+
 
 int obtenerSocket(){
 	int s;
