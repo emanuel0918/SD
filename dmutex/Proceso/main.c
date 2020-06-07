@@ -16,7 +16,6 @@
 #include <string.h>
 #include <strings.h>
 
-
 int puerto_udp;
 struct process_d{
   char* ID;
@@ -41,7 +40,6 @@ int main(int argc, char* argv[])
   void *mensaje;
   int sscanf_success;
   int tam_mensaje;
-  //int TAM_MAXIMO=256;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -91,8 +89,8 @@ int main(int argc, char* argv[])
     if(!strcmp(line,"START\n"))
       break;
 
-    sscanf_success=sscanf(line,"%s: %d",proc,&port); //validar que no aumente length_process
-    printf("sscanf_success : %d\nport : %d\n",sscanf_success,port);
+    sscanf_success=sscanf(line,"%[^:]: %d",proc,&port); //validar que no aumente length_process
+    //printf("sscanf_success : %d\n",sscanf_success);
     if(sscanf_success==2){
       /* Habra que guardarlo en algun sitio */
       //
@@ -145,10 +143,12 @@ int main(int argc, char* argv[])
 
       sockets_bind=(struct sockaddr_in*)realloc(sockets_bind,(length_process+1)*sizeof(struct sockaddr_in));
       length_process++;
+      strcpy(line,"");
+      strcpy(proc,"");
     }
   }
-  printf("Procesos %d\n",length_process);
-  imprimir_arreglo_ids(IDs,length_process);
+  //printf("Procesos %d\n",length_process);
+  //imprimir_arreglo_ids(p,length_process);
 
   /* Inicializar Reloj */
   p->vector=(int*)malloc(length_process*sizeof(int));
