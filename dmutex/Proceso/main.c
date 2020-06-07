@@ -181,12 +181,9 @@ int main(int argc, char* argv[])
     }
     //RECEIVE
     if(!strcmp(line,"RECEIVE\n")){
-      tam_mensaje=sizeof(p->vector)+sizeof(int);
+      tam_mensaje=sizeof(int)+((length_process)*sizeof(int));
       mensaje=malloc(tam_mensaje);
-      if((leido=recv(socket_p,mensaje,tam_mensaje,0))>0){
-        //perror("error en recv");
-
-      }
+      if((leido=read(socket_p,mensaje,tam_mensaje))>0){
       printf("%s: RECEIVE(MSG,%s)\n",p->ID,IDs[((int*)mensaje)[0]]);
       /* Algoritmo de Vectores Logicos de Lamport */
       for(int i=0;i<length_process;i++){
@@ -204,6 +201,8 @@ int main(int argc, char* argv[])
         }
       }
       printf("%s: TICK\n",p->ID);
+
+      }
     }
     //EVENT
     if(!strcmp(line,"EVENT\n")){
@@ -222,11 +221,9 @@ int main(int argc, char* argv[])
       index_proceso=obtener_index(IDs,proc,length_process);
       //printf("Puerto: %d\n",port);
       tam_dir=sizeof(sockets_bind[index_proceso]);
-      tam_mensaje=sizeof(int)+sizeof(p->vector);
+      tam_mensaje=sizeof(int)+(length_process)*sizeof(int);
       mensaje=malloc(tam_mensaje);
-      for(int i=0;i<length_process;i++){
-        ((int*)mensaje)[i+1]=p->vector[i];
-      }
+      memcpy(mensaje+sizeof(int),p->vector,(length_process)*sizeof(int));
       ((int*)mensaje)[0]=p->pid;
       sendto(socket_p, mensaje, tam_mensaje, 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
       printf("%s: SEND(MSG,%s)\n",p->ID,proc);

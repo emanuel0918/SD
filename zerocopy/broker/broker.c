@@ -116,7 +116,7 @@ void * servicio(void *arg){
 		printf("opc : %s\n",((char*)memoria_dinamica));
 		op=((char*)memoria_dinamica)[0];
 		char * nombre_cola=(char*)malloc((sizeof(memoria_dinamica)-1)*sizeof(char));
-		strcpy(nombre_cola+sizeof(char),memoria_dinamica);
+		
 		printf("op: %c\nnombre_cola : %s\n",op,nombre_cola);
 		send(s,"0\0",(4*sizeof(char)),0);
 	}
