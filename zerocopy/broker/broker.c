@@ -84,16 +84,19 @@ int main(int argc, char *argv[]){
 }
 void * servicio(void *arg){
 	int i;
-	int s, leido;
+	int s;
 	int error=0;
+	int leido;
+	int leido1,leido2,leido3,leido4,leido5,leido6,leido8,leido9;
 	char op=0;
 	char opc[2];
+	char resp1[2];
 	void * memoria_dinamica=malloc(sizeof(char));
 	//
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
 	//
-	for(int i=0;i<TAM_LONG;i++){
+	for( i=0;i<TAM_LONG;i++){
 		sizeof_cola_s[i]='\0';
 	}
 	int sizeof_cola;
@@ -103,30 +106,173 @@ void * servicio(void *arg){
 	struct thread_data * t_d;
 	t_d=(struct thread_data*)arg;
 	//
-	//if(t_d->cont>700000){
-		//t_d->cont=0;
-	//}
-	//t_d->cont++;
-    //s=(long) arg;
 	s=t_d->s_conect;
+	/*
+	LA MEMORIA DINAMICA QUE QUIERO DEBE CONTENER EL
+	iovec[3]
+	pero
 	
-	//
-	while((leido=read(s,memoria_dinamica,TAM_PAQUETE))>0){
+	*/
+    while ((leido=recv(s, opc,2,MSG_CONFIRM | MSG_WAITALL))>0) {
+		op=opc[0];
 
-		printf("opc : %s\n",((char*)memoria_dinamica));
-		op=((char*)memoria_dinamica)[0];
-		char * nombre_cola=(char*)malloc((sizeof(memoria_dinamica)-1)*sizeof(char));
-		
-		printf("op: %c\nnombre_cola : %s\n",op,nombre_cola);
-		send(s,"0\0",(4*sizeof(char)),0);
+		while ((leido=recv(s, sizeof_cola_s,TAM_LONG,MSG_CONFIRM | MSG_WAITALL))>0) {
+			sizeof_cola=atoi(sizeof_cola_s);
+			sizeof_cola+=1;
+			//printf("Prueba%d\nsizeof_cola: %d\n",t_d->cont,sizeof_cola);
+
+			//
+			
+			char nombre_cola[sizeof_cola];
+			for( i=0;i<sizeof_cola;i++){
+				nombre_cola[i]='\0';
+			}
+			//printf("sizeof(nombre_cola) : %d\n",(int)sizeof(nombre_cola));
+			while ((leido=recv(s, nombre_cola,sizeof_cola,MSG_WAITALL))>0) {
+				printf("opc: %c\n%s\n",op,nombre_cola);
+				//
+				//
+				if(op=='c' || op=='d'){
+					//printf("t_d->d->nentradas : %d\n",t_d->d->nentradas);
+					switch(op){
+						case 'c':
+							// createMQ()
+							dic_get(t_d->d,nombre_cola,&error);
+							if(error==-1){
+								dic_put(t_d->d,nombre_cola,(void*)(struct cola *)cola_create());
+								send(s,"0\0",(4*sizeof(char)),0);
+							}else{
+								send(s,"-1\0",(4*sizeof(char)),0);
+								perror("El registro ya existe\n");
+							}
+							break;
+
+						case 'd':
+							// destroyMQ()
+							dic_get(t_d->d,nombre_cola,&error);
+							if(error==-1){
+								send(s,"-1\0",(4*sizeof(char)),0);
+								perror("El registro no existe\n");
+							}else{
+								//free
+								free(dic_get(t_d->d,nombre_cola,&error));
+								//remover registro
+								dic_remove_entry(t_d->d,nombre_cola,NULL);
+								send(s,"0\0",(4*sizeof(char)),0);
+							}
+							break;
+					}
+
+				}else{
+					// FICH
+					switch(op){
+						case 'p':
+							while ((leido=read(s, sizeof_mensaje_s,TAM_LONG))>0) {
+								sizeof_mensaje=atoi(sizeof_mensaje_s)+1;
+								//
+								//
+								
+								char *mensaje=malloc(sizeof_mensaje*sizeof(char));
+								for( i=0;i<sizeof_mensaje;i++){
+									mensaje[i]='\0';
+								}
+								printf("sizeof(mensaje) : %d\n",(int)sizeof_mensaje);
+
+								//while ((leido=recv(s, mensaje, 256, MSG_WAITALL))>0){
+								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
+									//
+									dic_get(t_d->d,nombre_cola,&error);
+									if(error==-1){
+										send(s,"-1\0",(4*sizeof(char)),0);
+										perror("El registro no existe\n");
+									}else{
+										//push
+										cola_push_back(dic_get(t_d->d,nombre_cola,&error),mensaje);
+										//printf("cadena : %s\n",(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error));
+										send(s,"0\0",(4*sizeof(char)),0);
+									}
+								}
+								if (leido<0) {
+									perror("error en read5");
+									close(s);
+									return NULL;
+								}
+								//
+								//
+							}
+							if (leido<0) {
+									perror("error en read4");
+									close(s);
+									return NULL;
+							}
+
+							break;
+						case 'g':
+						case 'b':
+							//
+							dic_get(t_d->d,nombre_cola,&error);
+							char *cadena0=(char*)cola_pop_front(dic_get(t_d->d,nombre_cola,&error),&error);
+							if(error==-1){
+								send(s,"\000",sizeof(char),0);
+								perror("El registro no existe\n");
+								close(s);
+								return NULL;
+							}else{
+								//pop
+
+								struct iovec iov[2];
+
+								int sizeof_cadena=strlen(cadena0);
+								char cadena[sizeof_cadena+1];
+
+								for( i=0;i<sizeof_cadena+1;i++){
+									cadena[i]='\0';
+								}
+								strcpy(cadena,cadena0);
+								//strcpy(cadena,);
+								//
+
+								
+								//char *sizeof_mensaje_s1=intToString(sizeof_cadena);
+								for( i=0;i<TAM_LONG;i++){
+									sizeof_mensaje_s[i]='\0';
+								}
+								//for( i=0;i<strlen(sizeof_mensaje_s1);i++){
+									//sizeof_mensaje_s[i]=sizeof_mensaje_s1[i];
+								//}
+								//strcpy(sizeof_mensaje_s,sizeof_mensaje_s1);
+								sprintf(sizeof_mensaje_s, "%d", sizeof_cadena+1);
+								iov[0].iov_base=sizeof_mensaje_s;
+								iov[0].iov_len=TAM_LONG;
+								iov[1].iov_base=cadena;
+								iov[1].iov_base=strlen(cadena)+1;
+								while((leido9=writev(s,iov,2))>0){
+								}
+								
+								//send(s,cadena,sizeof(cadena),0);
+							}
+							break;
+					}
+
+				}
+			}
+			if (leido<0) {
+					perror("error en read3");
+					close(s);
+					return NULL;
+			}
+		}
+		if (leido<0) {
+				perror("error en read2");
+				close(s);
+				return NULL;
+		}
 	}
 	if (leido<0) {
 			perror("error en read1");
-			send(s,"-1\0",(4*sizeof(char)),0);
 			close(s);
 			return NULL;
 	}
-	
 	close(s);
 	return NULL;
 
