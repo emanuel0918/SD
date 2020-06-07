@@ -88,12 +88,9 @@ void * servicio(void *arg){
 	int i;
 	int s;
 	int error=0;
-	int leido;
-	int leido1,leido2,leido3,leido4,leido5,leido6,leido8,leido9;
+	int leido,leido9;
 	char op=0;
 	char opc[2];
-	char resp1[2];
-	void * memoria_dinamica=malloc(sizeof(char));
 	//
 	char sizeof_mensaje_s[TAM_LONG];
 	char sizeof_cola_s[TAM_LONG];
@@ -115,10 +112,10 @@ void * servicio(void *arg){
 	pero
 	
 	*/
-    while ((leido=recv(s, opc,2,MSG_CONFIRM | MSG_WAITALL))>0) {
+    while ((leido=read(s, opc,2))>0) {
 		op=opc[0];
 
-		while ((leido=recv(s, sizeof_cola_s,TAM_LONG,MSG_CONFIRM | MSG_WAITALL))>0) {
+		while ((leido=read(s, sizeof_cola_s,TAM_LONG))>0) {
 			sizeof_cola=atoi(sizeof_cola_s);
 			sizeof_cola+=1;
 			//printf("Prueba%d\nsizeof_cola: %d\n",t_d->cont,sizeof_cola);
@@ -196,7 +193,7 @@ void * servicio(void *arg){
 								//printf("sizeof(mensaje) : %d\n",(int)sizeof_mensaje);
 
 								//while ((leido=recv(s, mensaje, 256, MSG_WAITALL))>0){
-								while ((leido=read(s, mensaje,sizeof_mensaje))>0) {
+								while ((leido=recv(s, mensaje,sizeof_mensaje,MSG_WAITALL))>0) {
 									//
 									dic_get(t_d->d,nombre_cola,&error);
 									if(error==-1){
