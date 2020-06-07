@@ -113,10 +113,10 @@ void * servicio(void *arg){
 	pero
 	
 	*/
-    while ((leido=recv(s, opc,2,MSG_CONFIRM | MSG_WAITALL))>0) {
+    if ((leido1=read(s, opc,2))>0) {
 		op=opc[0];
 
-		while ((leido=recv(s, sizeof_cola_s,TAM_LONG,MSG_CONFIRM | MSG_WAITALL))>0) {
+		if ((leido2=read(s, sizeof_cola_s,TAM_LONG))>0) {
 			sizeof_cola=atoi(sizeof_cola_s);
 			sizeof_cola+=1;
 			//printf("Prueba%d\nsizeof_cola: %d\n",t_d->cont,sizeof_cola);
@@ -128,7 +128,7 @@ void * servicio(void *arg){
 				nombre_cola[i]='\0';
 			}
 			//printf("sizeof(nombre_cola) : %d\n",(int)sizeof(nombre_cola));
-			while ((leido=recv(s, nombre_cola,sizeof_cola,MSG_WAITALL))>0) {
+			if ((leido3=read(s, nombre_cola,sizeof_cola))>0) {
 				printf("opc: %c\n%s\n",op,nombre_cola);
 				//
 				//
@@ -255,6 +255,7 @@ void * servicio(void *arg){
 					}
 
 				}
+				printf("opc: %c\n%s\n",op,nombre_cola);
 			}
 			if (leido<0) {
 					perror("error en read3");

@@ -41,6 +41,7 @@ int main(int argc, char* argv[])
   int sscanf_success;
   int tam_mensaje;
   int TAM_MAXIMO=200;
+  char nombreSeccionCritica[TAM_MAXIMO];
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -185,10 +186,20 @@ int main(int argc, char* argv[])
     }
     //RECEIVE
     if(!strcmp(line,"RECEIVE\n")){
-      tam_mensaje=sizeof(int)+((length_process)*sizeof(int));
+      for(int i=0;i<TAM_MAXIMO;i++){
+        nombreSeccionCritica[i]='\0';
+      }
+      tam_mensaje=sizeof(int)
+      +(length_process)*sizeof(int)
+      +sizeof(int) * (TAM_MAXIMO+1);
       mensaje=malloc(tam_mensaje);
       if((leido=read(socket_p,mensaje,tam_mensaje))>0){
-      printf("%s: RECEIVE(MSG,%s)\n",p->ID,IDs[((int*)mensaje)[0]]);
+
+      for(int i=0;i<TAM_MAXIMO;i++){
+        nombreSeccionCritica[i]=(char)((int*)mensaje)[sizeof(int)
+      +(length_process)*sizeof(int)+i];
+      }
+      printf("%s: RECEIVE(%s,%s)\n",p->ID,nombreSeccionCritica,IDs[((int*)mensaje)[0]]);
       /* Algoritmo de Vectores Logicos de Lamport */
       for(int i=0;i<length_process;i++){
         if(i==p->pid){
@@ -222,15 +233,35 @@ int main(int argc, char* argv[])
     if(!strcmp(line2,"MESSAGETO")){
       p->vector[p->pid]+=1;
       printf("%s: TICK\n",p->ID);
+      for(int i=0;i<TAM_MAXIMO;i++){
+        nombreSeccionCritica[i]='\0';
+      }
+      nombreSeccionCritica[0]='M';
+      nombreSeccionCritica[1]='S';
+      nombreSeccionCritica[2]='G';
       index_proceso=obtener_index(IDs,proc,length_process);
       //printf("Puerto: %d\n",port);
       tam_dir=sizeof(sockets_bind[index_proceso]);
-      tam_mensaje=sizeof(int)+(length_process)*sizeof(int);
+      tam_mensaje=sizeof(int)
+      +(length_process)*sizeof(int)
+      +sizeof(int) * (TAM_MAXIMO+1);
       mensaje=malloc(tam_mensaje);
       memcpy(mensaje+sizeof(int),p->vector,(length_process)*sizeof(int));
+      //strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int), nombreSeccionCritica);
+
+      for(int i=0;i<TAM_MAXIMO;i++){
+        ((int*)mensaje)[sizeof(int)
+      +(length_process)*sizeof(int)+i]='\0';
+      }
+      ((int*)mensaje)[sizeof(int)
+      +(length_process)*sizeof(int)+0]='M';
+      ((int*)mensaje)[sizeof(int)
+      +(length_process)*sizeof(int)+1]='S';
+      ((int*)mensaje)[sizeof(int)
+      +(length_process)*sizeof(int)+2]='G';
       ((int*)mensaje)[0]=p->pid;
       sendto(socket_p, mensaje, tam_mensaje, 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
-      printf("%s: SEND(MSG,%s)\n",p->ID,proc);
+      printf("%s: SEND(%s,%s)\n",p->ID,nombreSeccionCritica,proc);
       strcpy(line2,"");
       strcpy(proc,"");
     }

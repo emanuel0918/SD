@@ -22,13 +22,6 @@ int create_destroy(const char * cola, char opc){
 	*/
 	iov[2].iov_base=cola;
 	iov[2].iov_len=atoi(sizeof_cola_s)+1;
-	/*
-	AQUI SOLAMENTE HE ENVIADO UNA TRANSMISION
-	*/
-	/*
-	iov[3].iov_base="0\0";
-	iov[3].iov_len=2;
-	*/
 	while((nwritten=writev(s,iov,3))>0){
 		if(read(s,respuesta,sizeof(respuesta))>0){
 			close(s);
@@ -120,7 +113,6 @@ int get(const char *cola, void **mensaje, uint32_t *tam, bool blocking) {
 				}
 				*mensaje=(char*)malloc(sizeof_mensaje*sizeof(char));
 				*tam=(uint32_t )sizeof_mensaje;
-				send(s,respuesta,sizeof(respuesta),0);
 				if((leido=read(s,mensaje_s,sizeof_mensaje)>0)){
 					//printf("cadena : %s\n",mensaje_s);
 					strcpy(*mensaje,mensaje_s);
