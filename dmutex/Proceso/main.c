@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
   void *mensaje;
   int sscanf_success;
   int tam_mensaje;
+  int tam_IDs=0;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
     p->ID=(char *) realloc (p->ID, sizeof (char) * (l_p + 1));
   }
   fprintf(stdout,"%s: %d\n",p->ID,puerto_udp);
-  IDs=(char **)malloc(sizeof(char*));
+  IDs=(char **)malloc(4096);
   ports=(int*)malloc(sizeof(int));
   sockets=(int*)malloc(sizeof(int));
   sockets_bind=(struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
@@ -109,7 +110,7 @@ int main(int argc, char* argv[])
         IDs[length_process]=(char *) realloc (IDs[length_process], sizeof (char) * (l_p + 1));
       }
       //
-      IDs=(char **)realloc(IDs,(length_process+1)*sizeof(char*));
+      //IDs=(char **)realloc(IDs,(length_process+1)*sizeof(char*));
       //
       //
       //
