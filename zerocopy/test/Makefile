@@ -1,7 +1,7 @@
 CFLAGS=-Wall -g
 
 all: libzerocopyMQ test
-
+	gcc generador.c -o generador
 libzerocopyMQ:
 	$(MAKE) -C ../libzerocopyMQ
 
