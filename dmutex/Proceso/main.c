@@ -222,6 +222,7 @@ int main(int argc, char* argv[])
       +sizeof(char) * (TAM_MANDATO+1)
       +sizeof(char)*(TAM_MAXIMO+1);
       mensaje=malloc(tam_mensaje);
+      //if((leido=recv(socket_p,mensaje,tam_mensaje,MSG_WAITALL))>0)
       if((leido=read(socket_p,mensaje,tam_mensaje))>0){
         /*
         for(int i=0;i<TAM_MAXIMO;i++){
@@ -322,9 +323,6 @@ int main(int argc, char* argv[])
             //
             //
             //
-            //LOCK SEND OK
-            p->vector[p->pid]+=1;
-            printf("%s: TICK\n",p->ID);
             strcpy(line2,"");
             strcpy(proc,"");
           }
@@ -347,8 +345,6 @@ int main(int argc, char* argv[])
               }
             }
           }
-          printf("%s: TICK\n",p->ID);
-          p->vector[p->pid]+=1;
           //HABRIA QUE COMPARAR SI ESTA DISPONIBLE
           if(seccionCriticaDisponible(seccionesCriticas,nombreSeccionCritica,n_sc)==1){
             int p_id_ok=((int*)mensaje)[0];
