@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
       mensaje=malloc(tam_mensaje);
       memcpy(mensaje+sizeof(int),p->vector,(length_process)*sizeof(int));
       strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int), mandato_send);
-      strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int)+(sizeof(char)*(5)), nombreSeccionCritica);
+      strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int)+(sizeof(char)*(5)), p->ID);
       /*
       for(int i=0;i<TAM_MAXIMO;i++){
         ((int*)mensaje)[sizeof(int)
