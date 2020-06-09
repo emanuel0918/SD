@@ -24,10 +24,12 @@ struct process_d{
 };
 void imprimir_arreglo_ids(char ** IDs,int length_process);
 int obtener_index(char ** IDs,char * ID,int length_process);
+char* substr (const char* cadena, int offset, int l, char* cadena2);
 int main(int argc, char* argv[])
 {
   int port;
   char line[80],proc[80];
+  char *receive_msg;
   char **IDs;
   struct sockaddr_in * sockets_bind;
   int *ports;
@@ -40,9 +42,11 @@ int main(int argc, char* argv[])
   void *mensaje;
   int sscanf_success;
   int tam_mensaje;
-  //int TAM_MAXIMO=15;
+  int TAM_MAXIMO=25;
   int MAX_P=200;
   //char nombreSeccionCritica[TAM_MAXIMO];
+  char *nombreSeccionCritica;
+  char *mandato_send;
   if(argc<2)
   {
     fprintf(stderr,"Uso: proceso <ID>\n");
@@ -160,6 +164,8 @@ int main(int argc, char* argv[])
     p->vector[i]=0;
   }
 
+  receive_msg=(char*)malloc(sizeof(char)*5);
+
   //
   //
   //
@@ -194,32 +200,45 @@ int main(int argc, char* argv[])
       */
       tam_mensaje=sizeof(int)
       +(length_process)*sizeof(int)
-      /*+sizeof(int) * (TAM_MAXIMO+1)*/;
+      +sizeof(char) * (5)
+      +sizeof(char)*(TAM_MAXIMO+1);
       mensaje=malloc(tam_mensaje);
       if((leido=read(socket_p,mensaje,tam_mensaje))>0){
-      /*
-      for(int i=0;i<TAM_MAXIMO;i++){
-        nombreSeccionCritica[i]=(char)((int*)mensaje)[sizeof(int)
-      +(length_process)*sizeof(int)+i];
-      }
-      */
-      printf("%s: RECEIVE(MSG,%s)\n",p->ID/*,nombreSeccionCritica*/,IDs[((int*)mensaje)[0]]);
-      /* Algoritmo de Vectores Logicos de Lamport */
-      for(int i=0;i<length_process;i++){
-        if(i==p->pid){
-          if(((int*)mensaje)[(i+1)] > p->vector[i]){
-            p->vector[i]=((int*)mensaje)[(i+1)];
-            p->vector[i]++;
-          }else{
-            p->vector[i]++;
-          }
-        }else{
-          if(((int*)mensaje)[(i+1)] > p->vector[i]){
-            p->vector[i]=((int*)mensaje)[(i+1)];
-          }
+        /*
+        for(int i=0;i<TAM_MAXIMO;i++){
+          nombreSeccionCritica[i]=(char)((int*)mensaje)[sizeof(int)
+        +(length_process)*sizeof(int)+i];
         }
-      }
-      printf("%s: TICK\n",p->ID);
+        */
+        mandato_send=(char*)malloc(sizeof(char)*5);
+        strcpy(mandato_send,((char*)mensaje)+sizeof(int)+(length_process)*sizeof(int));
+        nombreSeccionCritica=(char*)malloc(sizeof(char)*(TAM_MAXIMO+1));
+        strcpy(nombreSeccionCritica,((char*)mensaje)+sizeof(int)+(length_process)*sizeof(int)+(sizeof(char)*(5)));
+        //RECEIVE(MSG,)
+        substr(mandato_send,0,3,receive_msg);
+        if(!strcmp(receive_msg,"MSG")){
+          printf("%s: RECEIVE(%s,%s)\n",p->ID,mandato_send,nombreSeccionCritica);
+          /* Algoritmo de Vectores Logicos de Lamport */
+          for(int i=0;i<length_process;i++){
+            if(i==p->pid){
+              if(((int*)mensaje)[(i+1)] > p->vector[i]){
+                p->vector[i]=((int*)mensaje)[(i+1)];
+                p->vector[i]++;
+              }else{
+                p->vector[i]++;
+              }
+            }else{
+              if(((int*)mensaje)[(i+1)] > p->vector[i]){
+                p->vector[i]=((int*)mensaje)[(i+1)];
+              }
+            }
+          }
+          printf("%s: TICK\n",p->ID);
+        }
+        //RECEIVE(MSG,)
+        substr(mandato_send,0,4,receive_msg);
+        if(!strcmp(receive_msg,"LOCK")){
+        }
 
       }
     }
@@ -245,15 +264,36 @@ int main(int argc, char* argv[])
       nombreSeccionCritica[1]='S';
       nombreSeccionCritica[2]='G';
       */
-      index_proceso=obtener_index(IDs,proc,length_process);
+      //COPIAR CADENA
+      nombreSeccionCritica=(char*)malloc(sizeof(char)*(TAM_MAXIMO+1));
+      l_p=0;
+      c=proc[0];
+      while(c!='\000'){
+        c=proc[l_p];
+        nombreSeccionCritica[l_p]=c;
+        l_p++;
+        //nombreSeccionCritica=(char *) realloc (nombreSeccionCritica, sizeof (char) * (l_p + 1));
+        //
+      }
+      for(;l_p<TAM_MAXIMO+1;l_p++){
+        nombreSeccionCritica[l_p]='\0';
+      }
+      //
+      //
+      mandato_send=(char*)malloc(sizeof(char)*3);
+      strcpy(mandato_send,"MSG\0");
+      index_proceso=obtener_index(IDs,nombreSeccionCritica,length_process);
       //printf("Puerto: %d\n",port);
       tam_dir=sizeof(sockets_bind[index_proceso]);
       tam_mensaje=sizeof(int)
       +(length_process)*sizeof(int)
-      /*+sizeof(int) * (TAM_MAXIMO+1)*/;
+      +sizeof(char)*(5)
+      +sizeof(char)*(TAM_MAXIMO+1);
+      /*+sizeof(int) * (TAM_MAXIMO+1)*/
       mensaje=malloc(tam_mensaje);
       memcpy(mensaje+sizeof(int),p->vector,(length_process)*sizeof(int));
-      //strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int), nombreSeccionCritica);
+      strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int), mandato_send);
+      strcpy(mensaje + sizeof(int)+(length_process)*sizeof(int)+(sizeof(char)*(5)), nombreSeccionCritica);
       /*
       for(int i=0;i<TAM_MAXIMO;i++){
         ((int*)mensaje)[sizeof(int)
@@ -268,7 +308,7 @@ int main(int argc, char* argv[])
       */
       ((int*)mensaje)[0]=p->pid;
       sendto(socket_p, mensaje, tam_mensaje, 0,(struct sockaddr *)&sockets_bind[index_proceso], tam_dir);
-      printf("%s: SEND(MSG,%s)\n",p->ID,/*nombreSeccionCritica,*/proc);
+      printf("%s: SEND(%s,%s)\n",p->ID,mandato_send,nombreSeccionCritica);
       strcpy(line2,"");
       strcpy(proc,"");
     }
@@ -305,4 +345,16 @@ void imprimir_arreglo_ids(char ** IDs,int length_process){
     }
   }
   printf("]\n");
+}
+char* substr (const char* cadena, int offset, int l, char* cadena2)
+{
+  int l2;
+  l2 = strlen (cadena);
+
+  if (offset + l > l2){
+     return NULL;
+  }
+
+  strncpy (cadena2, cadena + offset, l);
+  return cadena2;
 }
